@@ -1,0 +1,30 @@
+/* Basic tweaks */
+:root {
+  --card-img-h: 180px;
+}
+
+.card-img-top {
+  height: var(--card-img-h);
+  object-fit: cover;
+}
+
+.badge.price {
+  font-weight: 600;
+}
+
+.quantity-control .btn {
+  width: 2.2rem;
+}
+
+#product-grid .col { display: flex; }
+
+footer { background: #fff; }
+
+/* Optional util for cart thumbnails */
+.object-fit-cover { object-fit: cover; }
+
+/* Improve focus styles for accessibility */
+:focus-visible {
+  outline: 3px dashed #198754;
+  outline-offset: 2px;
+}
