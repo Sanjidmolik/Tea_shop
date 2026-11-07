@@ -22,6 +22,18 @@ The look is based on the stencilled wooden chests tea travels in from the estate
 
 All colours and the type scale are CSS variables at the top of `styles.css`.
 
+### Animation
+
+Motion lives in `animations.css` and `animations.js`:
+
+- Hero: drifting tea leaves; the headline rises word by word; the chest drops in, gets stamped, and tilts toward the mouse
+- A scrolling ticker for delivery and payment info
+- Section headings wipe on like spray paint through a stencil; tea cards rise in on scroll and after filtering
+- Add to cart: the tea's photo flies into the cart and the button reads "Added"
+- The order confirmation label is stamped on
+
+Visitors whose device asks for reduced motion get the static site. To turn animation off entirely, remove the two `animations.*` lines from `index.html`.
+
 ## Run
 
 Open `index.html` in a browser, or serve the folder locally:
