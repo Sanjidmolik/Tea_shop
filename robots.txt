@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sanjidmolik.github.io/Tea_shop/sitemap.xml

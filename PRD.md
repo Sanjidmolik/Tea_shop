@@ -11,7 +11,7 @@
 
 Cha Bazaar is a single-page online tea shop for customers in Bangladesh. It sells loose-leaf and blended teas from Sylhet, Assam, Darjeeling and elsewhere, priced in Bangladeshi taka (৳), with cash or mobile-banking payment on delivery.
 
-**Current state:** a static front end (HTML, CSS, vanilla JavaScript, Bootstrap 5) with a working catalogue, cart and checkout UI. **It has no back end.** Orders are only saved in the customer's own browser, so the shop owner never receives them (see A-01).
+**Current state (v2, 2026-11-07):** a static front end (HTML, CSS, vanilla JavaScript, Bootstrap 5) plus a Google Apps Script order server that writes to a Google Sheet. Real order submission, delivery areas, bKash/Nagad (manual), trust pages, pack sizes, quick view, Bangla and SEO are implemented. **Going live still needs the owner's business details and a one-time server deployment** (see §11 and [apps-script/README.md](apps-script/README.md)).
 
 ## 2. Business goals
 
@@ -45,13 +45,15 @@ Exact customer research: **TBD**.
 | F-03 | Sort: featured, price ascending/descending, name A–Z/Z–A | IMPLEMENTED |
 | F-04 | Category filter tabs with counts (All, Black, Spiced, Green, Herbal) | IMPLEMENTED |
 | F-05 | Cart: add, change quantity, remove, empty; saved in `localStorage`; synced across tabs | IMPLEMENTED |
-| F-06 | Delivery fee ৳60, free from ৳1,500, with progress bar | IMPLEMENTED |
-| F-07 | Checkout form with client-side validation (name, BD mobile, address, city, payment, note) | IMPLEMENTED |
-| F-08 | Order confirmation with order ID; order saved in the customer's browser only | IMPLEMENTED (no delivery to owner) |
-| F-09 | Contact form with validation; **does not send anything** | IMPLEMENTED (UI only) |
+| F-06 | Delivery by area (Inside Dhaka ৳60 / Outside Dhaka ৳120), free inside Dhaka from ৳1,500, with progress bar | IMPLEMENTED (v2) |
+| F-07 | Checkout: name, BD mobile, email, delivery area, address, Cash on delivery / bKash / Nagad, note, promo, remember-me; validated in the browser and on the server | IMPLEMENTED (v2) |
+| F-08 | Order confirmation, shown only after the server confirms the order | IMPLEMENTED (v2, via P-01) |
+| F-09 | Contact form, saved to the Sheet `Messages` tab | IMPLEMENTED (v2, via P-13) |
 | F-10 | Motion layer (hero, ticker, reveals, fly-to-cart) honouring reduced motion | IMPLEMENTED |
 | F-11 | Broken-image fallback | IMPLEMENTED |
 | F-12 | Responsive layout and accessibility basics (skip link, focus styles, labels) | IMPLEMENTED |
+
+Proposed features P-01 to P-24 and their v2 status are listed in [FEATURES.md](FEATURES.md#index). All of P-01 to P-13 and P-15 to P-21 and P-23 are now IMPLEMENTED; P-14 (photo licences) needs the owner; P-22 (online payment) is not approved; P-24 is partly done (SRI, no CSP yet).
 
 ### 4.2 Out of scope (for now)
 
@@ -70,15 +72,15 @@ Exact customer research: **TBD**.
 | US-04 | shopper | add teas to a cart and change quantities | I can build an order | F-05 | IMPLEMENTED |
 | US-05 | shopper | see how far I am from free delivery | I can decide to add more | F-06 | IMPLEMENTED |
 | US-06 | shopper | check out with my address and pay on delivery | I don't need a card | F-07 | IMPLEMENTED (UI) |
-| US-07 | shop owner | receive every order with customer details | I can deliver it | P-01 | PROPOSED |
-| US-08 | shopper | call or WhatsApp the shop | I can ask before paying cash | P-02 | PROPOSED |
-| US-09 | shopper outside Dhaka | see the correct delivery fee and time | there are no surprises | P-03 | PROPOSED |
-| US-10 | first-time shopper | see reviews and a freshness guarantee | I trust the shop | P-04 | PROPOSED |
-| US-11 | shopper | compare price per 100g and choose pack sizes | I get fair value | P-05 | PROPOSED |
-| US-12 | shopper | know that bKash and Nagad are accepted | I can pay the way I prefer | P-06 | PROPOSED |
-| US-13 | shopper | open a tea's details and share its link | I can learn more and show others | P-07 | PROPOSED |
-| US-14 | shop owner | receive contact-form messages | I can answer questions | P-13 | PROPOSED |
-| US-15 | shopper with motion sensitivity | pause moving content | the page is comfortable to use | P-09 | PROPOSED |
+| US-07 | shop owner | receive every order with customer details | I can deliver it | P-01 | IMPLEMENTED (needs deployment) |
+| US-08 | shopper | call or WhatsApp the shop | I can ask before paying cash | P-02 | IMPLEMENTED (needs numbers) |
+| US-09 | shopper outside Dhaka | see the correct delivery fee and time | there are no surprises | P-03 | IMPLEMENTED |
+| US-10 | first-time shopper | see reviews and a freshness guarantee | I trust the shop | P-04 | IMPLEMENTED (needs genuine reviews) |
+| US-11 | shopper | compare price per 100g and choose pack sizes | I get fair value | P-05 | IMPLEMENTED |
+| US-12 | shopper | know that bKash and Nagad are accepted | I can pay the way I prefer | P-06 | IMPLEMENTED |
+| US-13 | shopper | open a tea's details and share its link | I can learn more and show others | P-07 | IMPLEMENTED |
+| US-14 | shop owner | receive contact-form messages | I can answer questions | P-13 | IMPLEMENTED (needs deployment) |
+| US-15 | shopper with motion sensitivity | pause moving content | the page is comfortable to use | P-09 | IMPLEMENTED |
 
 ## 6. Functional requirements
 
@@ -102,6 +104,7 @@ Exact customer research: **TBD**.
 
 | ID | Requirement | Feature |
 |---|---|---|
+| — | *v2: FR-20 to FR-25 are all IMPLEMENTED; FR-24 shows price per 100g except on 100g packs* | |
 | FR-20 | Every placed order is sent to the owner's order store (Google Sheet, TBD) and the customer only sees "Order placed" after it succeeds | P-01 |
 | FR-21 | If sending fails, the customer sees a clear error and a WhatsApp fallback with the order pre-filled | P-01, P-02 |
 | FR-22 | The server recalculates totals from its own price list; client prices are never trusted | P-01 |
@@ -125,13 +128,13 @@ Exact customer research: **TBD**.
 
 ## 8. Acceptance criteria (product level)
 
-The product is **launch-ready** when all of these are true:
+The product is **launch-ready** when all of these are true (v2 status in brackets):
 
-1. A test order placed on the live site appears in the owner's order store with all customer fields and items (P-01).
-2. A real phone number and WhatsApp button are visible on every screen size (P-02).
-3. The delivery fee matches the chosen zone (P-03).
-4. Checkout names bKash and Nagad as accepted on-delivery options (P-06).
-5. All text meets 4.5:1 contrast (P-08).
+1. A test order placed on the live site appears in the owner's order store with all customer fields and items (P-01). *[Code done and tested against the real `Code.gs`; needs deployment]*
+2. A real phone number and WhatsApp button are visible on every screen size (P-02). *[Code done; needs the numbers in `config.js`]*
+3. The delivery fee matches the chosen zone (P-03). *[Done]*
+4. Checkout names bKash and Nagad as accepted on-delivery options (P-06). *[Done; numbers needed]*
+5. All text meets 4.5:1 contrast (P-08). *[Done: amber now `#9A5B00`]*
 6. All placeholder content (email, hours, prices, grades, origins) has been replaced or confirmed by the owner (see the TBD list in §11).
 7. The tests in [TESTING.md](TESTING.md) §5 (E2E) and §6 (manual QA) pass.
 
@@ -151,6 +154,9 @@ Audit performed on 2026-11-07 against the current build. Grades are per area.
 | Performance and SEO | C | Heavy images, no metadata |
 
 ### Findings
+
+> **v2 status:** A-01 to A-13 are fixed in code (A-01, A-02 and A-13 need deployment or business details). A-14 (photo licences) is still open; it needs the owner. Nice-to-haves A-15 to A-21 are implemented.
+
 
 | ID | Severity | Finding | Evidence | Fix → feature |
 |---|---|---|---|---|

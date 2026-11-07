@@ -3,16 +3,43 @@
 > Status legend: **IMPLEMENTED** · **PROPOSED** · **TBD** (see [PRD.md](PRD.md)).
 > Related: [FEATURES.md](FEATURES.md) · [AGENTS.md](AGENTS.md) · [DEBUGGING.md](DEBUGGING.md) · [SETUP.md](SETUP.md)
 
-## 1. Current state
+## 1. Current state (v2)
 
-| Item | Status |
+| Suite | Command | What it covers | Result (2026-11-07) |
+|---|---|---|---|
+| Static checks | `npm run check` | Syntax of every script and `Code.gs`, `catalog.js` strict JSON and image paths, duplicate HTML ids, missing local files, Bangla text for every `data-i18n` key, unknown `t()` keys, obvious secrets | Pass |
+| Server tests | `npm run test:server` | 25 tests of the **real** `apps-script/Code.gs` on simulated Google services (`tests/gas-mock.js`): totals, delivery, re-pricing, duplicates, IDs, validation, stock, honeypot, rate limits, formula injection, e-mail, catalogue cache and failure, promos, contact | 25/25 pass |
+| Browser tests | `npm run test:e2e` | 28 Playwright tests against `tests/mock-server.js` (site + `/exec` running `Code.gs`). Includes all 20 cases from the upgrade brief, plus Bangla, policy pages, contact, remember-me/reorder/migration, stock labels and sample reviews | 28/28 pass |
+| All | `npm test` | The three above | Pass |
+
+Setup once: `npm install` then `npx playwright install chromium`. If your network blocks cdn.jsdelivr.net, set `CDN_MIRROR` to a folder containing `bootstrap/` and `bootstrap-icons/` npm packages.
+
+**What the automated tests can't prove:** that the real Google deployment is configured correctly (permissions, `CATALOG_URL`, access "Anyone"). Do the live test in §6 after deploying.
+
+### Mapping to the upgrade brief
+
+| Brief test | Automated test(s) |
 |---|---|
-| Automated tests in the repo | **None** |
-| Test runner or `package.json` | None |
-| CI | None |
-| Ad-hoc checks during development | A headless-Chromium script (not committed) exercised: catalogue render, filtering, add/decrease, totals (৳1,470 / ৳820), validation, order placement, the empty cart afterwards, no horizontal scroll at 390px and 1280px, reduced motion, no console errors. All passed on commit `1b25d2e` |
-
-**PROPOSED (P-23, needs approval):** a dev-only `package.json` with Playwright, plus the tests in §3–§5. Until then, run §6 manually before every merge.
+| 1 Homepage loads | E2E 1 |
+| 2 Product cards display | E2E 2 |
+| 3 Quick view | E2E 3, 17 |
+| 4 Variants update prices | E2E 4; server "variant prices" |
+| 5 Add to cart | E2E 5 |
+| 6 Cart quantities | E2E 6 |
+| 7 Inside Dhaka ৳60 | E2E 7; server "valid order" |
+| 8 Outside Dhaka ৳120 | E2E 8; server "outside Dhaka" |
+| 9 Checkout validation | E2E 9 |
+| 10 Invalid phone rejected | E2E 10; server "invalid phone" |
+| 11 Order reaches Google Sheets | E2E 11 (simulated Sheet) + live test §6 |
+| 12 Duplicates prevented | E2E 12; server "duplicate submission" |
+| 13 Confirmation only after success | E2E 13, 13b |
+| 14 WhatsApp links | E2E 14, 14b |
+| 15 Payment methods | E2E 15 |
+| 16 Mobile layout | E2E 16 |
+| 17 Keyboard navigation | E2E 17 |
+| 18 Reduced motion | E2E 18 |
+| 19 Product sharing URLs | E2E 19 |
+| 20 SEO metadata | E2E 20 |
 
 ## 2. Strategy
 
@@ -25,7 +52,7 @@ flowchart TB
 
 Because `app.js` is a classic script, its top-level functions are globals. Unit tests can call them inside the page through Playwright `page.evaluate()` **without changing the source code**.
 
-## 3. Unit tests (PROPOSED)
+## 3. Unit tests (original plan; superseded by the server tests and E2E 4–8)
 
 | ID | Function | Case | Expected |
 |---|---|---|---|
@@ -51,7 +78,7 @@ test("deliveryFee thresholds", async ({ page }) => {
 });
 ```
 
-## 4. Integration tests (PROPOSED)
+## 4. Integration tests (original plan; I-07 to I-11 are now covered by `tests/server.test.js`)
 
 | ID | Area | Steps | Expected |
 |---|---|---|---|
@@ -67,7 +94,7 @@ test("deliveryFee thresholds", async ({ page }) => {
 | I-10 | **Duplicate** (P-01) | Same `clientRequestId` twice | One row |
 | I-11 | **Contact** (P-13) | POST a valid message | Row in `Messages` |
 
-## 5. End-to-end tests (PROPOSED)
+## 5. End-to-end tests (original plan; now `tests/e2e.test.js`)
 
 Viewports: 390×844 (phone) and 1280×800 (desktop). CDN files may need to be served locally in sandboxed CI (DEBUGGING.md §3).
 
@@ -112,7 +139,7 @@ Viewports: 390×844 (phone) and 1280×800 (desktop). CDN files may need to be se
 - [ ] Lighthouse mobile: record Performance, Accessibility, Best Practices and SEO scores (targets TBD)
 - [ ] Total transferred size on first load (target after P-10: < 1 MB)
 
-**Live order flow (after P-01)**
+**Live order flow (after deploying the server; required before launch)**
 - [ ] A real order from a phone on mobile data reaches the Sheet and the email alert
 - [ ] Delete the test rows afterwards
 

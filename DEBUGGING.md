@@ -80,7 +80,7 @@ localStorage.removeItem("tea-shop-cart"); localStorage.removeItem("tea-shop-orde
 
 | Check | How |
 |---|---|
-| Cart format | It must be `[{ "id": number, "qty": positive integer }]` (DATABASE.md §1.2) |
+| Cart format | It must be `[{ "id": number, "qty": positive integer }]` (DATABASE.md §3) |
 | Orders | `JSON.parse(localStorage["tea-shop-orders"])`, an array of order objects |
 | Storage blocked (Safari private mode or strict settings) | `readJSON` and `writeJSON` fail silently, so the cart won't persist; expected behaviour |
 
@@ -88,8 +88,8 @@ localStorage.removeItem("tea-shop-cart"); localStorage.removeItem("tea-shop-orde
 
 | Symptom | Check |
 |---|---|
-| CORS error in the console | The request must use `Content-Type: text/plain`; a JSON content type triggers a preflight that Apps Script can't answer (API.md §3.1) |
-| `ok:false` responses | Read the `error` code (API.md §3.1 table) |
+| CORS error in the console | The request must use `Content-Type: text/plain`; a JSON content type triggers a preflight that Apps Script can't answer (API.md §1) |
+| `ok:false` responses | Read the `error` code (API.md §1.5 table) |
 | Nothing in the Sheet | Apps Script editor → **Executions** to see logs and stack traces |
 | Works for you but not for customers | The deployment access isn't set to *Anyone*, or an old deployment URL is in `ORDER_ENDPOINT` |
 | Duplicate rows | Check the `clientRequestId` handling and that the button is disabled while sending |
@@ -105,3 +105,22 @@ Use the **test** deployment and test Sheet while debugging (MCP.md §3).
 5. The commit you are on (`git log -1 --oneline`)
 
 Then follow TESTING.md §8.
+
+
+## 7. v2 additions: orders, settings and translations
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Checkout says "Online ordering isn't switched on yet" | `ORDER_ENDPOINT` is still `YOUR_APPS_SCRIPT_URL` | Deploy the server and set it (apps-script/README.md) |
+| "We couldn't confirm your order" every time | Wrong `/exec` URL, deployment access not **Anyone**, or offline | Open the URL in a browser: it must show `{"ok":true,...}` |
+| Console shows a CORS error on `/exec` | Request sent with a JSON content type, or a `/dev` URL | Keep `Content-Type: text/plain` (as in `postToServer`) and use the `/exec` URL |
+| "Prices or delivery charges have changed" on every order | Server reads a different `catalog.js` (wrong `CATALOG_URL`, or not yet published) | Fix `CATALOG_URL`; run `checkSetup` in Apps Script to clear the cache |
+| Whole shop blank after editing `catalog.js` | JSON syntax error (trailing comma, single quotes, comment inside braces) | `npm run check` shows the exact problem |
+| A pack size doesn't appear | Its `price` is `null` | Set a price |
+| WhatsApp button, phone or Facebook links missing | That setting is still `YOUR_…` | Fill it in `config.js` (the yellow setup bar on localhost lists them) |
+| Bangla shows boxes or English | Font blocked, or a new `data-i18n` key without Bangla | Check Google Fonts in Network; `npm run check` lists missing keys |
+| Quick view doesn't open from a link | Slug isn't in `catalog.js` (you'll see "We couldn't find that tea") | Check `products[].slug` |
+| Order rows have `'` in front of some text | Customer text started with `= + - @` (formula protection) | Expected |
+| Order numbers jumped | Test orders were deleted; the sequence keeps counting | Delete the `ORDER_SEQ` script property to restart (only before launch) |
+
+Server-side logs: Apps Script editor → **Executions**. To run the real server code locally, use `npm run serve` (see SETUP.md §8).

@@ -73,3 +73,4 @@ Add `.mcp.json` to `.gitignore` if it ever holds real values (`.gitignore` doesn
 | MCP config in the repo | None |
 | Servers used while building this project | A GitHub MCP and a headless browser were used by the coding assistant during development. This isn't part of the repo and needs no setup |
 | Owner decision on which servers to adopt | TBD |
+| Local alternative for testing the order server | `npm run serve` runs the real `Code.gs` on simulated Google services, so no Sheets MCP is needed for development |

@@ -1,0 +1,18 @@
+{
+  "name": "cha-bazaar",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Cha Bazaar tea shop: static website + Google Apps Script order server. No build step.",
+  "scripts": {
+    "serve": "node tests/mock-server.js",
+    "check": "node tests/check.js",
+    "test:server": "node tests/server.test.js",
+    "test:e2e": "node tests/e2e.test.js",
+    "test": "node tests/check.js && node tests/server.test.js && node tests/e2e.test.js",
+    "images": "python3 tools/optimize-images.py",
+    "og-image": "node tools/render-og-image.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

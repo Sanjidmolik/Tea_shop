@@ -28,9 +28,9 @@ These work today (IMPLEMENTED) and must keep working after every change. Run TES
 |---|---|
 | Catalogue | 8 teas render with image, grade, origin, brew data, price and Add to cart |
 | Filters | Search (name, category, description, grade, origin), sort (5 options), category tabs with counts, empty state with Show all teas |
-| Cart | Add, +/−, − at 1 removes, remove, Empty cart (with confirmation), totals, delivery fee rule, free-delivery bar, cross-tab sync, persists across reload |
-| Checkout | Disabled when the cart is empty; validation; phone normalisation; order ID; confirmation; cart emptied after the order |
-| Contact | Validation; success toast |
+| Cart | Add (per pack size), +/−, − at 1 removes, remove, Empty cart (with confirmation), totals, delivery by area, free-delivery bar, cross-tab sync, persists across reload, reorder |
+| Checkout | Disabled when the cart is empty; validation incl. delivery area; phone normalisation; one request per attempt (`clientRequestId`); **confirmation only after server `ok:true`**; errors keep the cart and offer WhatsApp/phone; cart emptied only after success |
+| Contact | Validation; sends to the server; never reports success without the server |
 | Layout | No horizontal scroll from 320px to 1920px wide |
 | Accessibility | Skip link, focus outlines, labels, `aria-*` attributes listed in DESIGN.md §8 |
 | Motion | Disabled under reduced motion; the cards' heading reveal works (see DEBUGGING.md, clip-path gotcha) |
@@ -38,8 +38,11 @@ These work today (IMPLEMENTED) and must keep working after every change. Run TES
 ### Protected contracts
 
 - **DOM IDs and hook classes** listed in API.md §2. Don't rename them without updating every reference in the same commit.
-- **`localStorage` keys** `tea-shop-cart` and `tea-shop-orders`, and their formats (DATABASE.md §1).
-- **Script order:** Bootstrap bundle → `app.js` → `animations.js`.
+- **`localStorage` keys and formats** in DATABASE.md §3 (cart is `{sku, qty}`).
+- **`catalog.js` must stay strict JSON** after `window.CHA_CATALOG =` (the order server parses it). Never rename a SKU.
+- **Server rules must match:** `deliveryFee` in `shared.js` and `deliveryFee_` in `Code.gs`.
+- **Never show fake reviews, ratings, stock or discounts.** Reviews come only from `catalog.js` `reviews`; promo codes only from the Sheet.
+- **Script order:** Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `animations.js`.
 - **Design tokens** in `:root` of `styles.css`. Change values there, not with one-off hex codes.
 
 ## 3. How to work
@@ -76,3 +79,8 @@ Stop and ask the owner before:
 - WCAG AA contrast for any new colours
 - Docs updated; status labels accurate
 - Work committed on the assigned branch and pushed
+
+
+## 6. Tests to run (v2)
+
+`npm test` must pass before every commit that touches code: static checks, 25 server tests and the browser suite. Add a test when you fix a bug. Never weaken a test to make it pass.

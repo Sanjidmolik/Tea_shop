@@ -1,70 +1,29 @@
 # API — Cha Bazaar Interfaces
 
 > Status legend: **IMPLEMENTED** · **PROPOSED** · **TBD** (see [PRD.md](PRD.md)).
-> Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [DATABASE.md](DATABASE.md) · [INTEGRATIONS.md](INTEGRATIONS.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md)
+> Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [DATABASE.md](DATABASE.md) · [INTEGRATIONS.md](INTEGRATIONS.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md) · [apps-script/README.md](apps-script/README.md)
 
-## 1. Existing HTTP endpoints
-
-**None.** Cha Bazaar has no back end and makes no `fetch` or XHR calls. The only network requests are static asset loads:
-
-| Request | Host | Purpose | Status |
-|---|---|---|---|
-| `GET /npm/bootstrap@5.3.3/dist/css/bootstrap.min.css` | cdn.jsdelivr.net | Styles | IMPLEMENTED |
-| `GET /npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js` | cdn.jsdelivr.net | Offcanvas, modal, toast, collapse | IMPLEMENTED |
-| `GET /npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css` (+ font files) | cdn.jsdelivr.net | Icons | IMPLEMENTED |
-| `GET /css2?family=Big+Shoulders+Stencil…&family=Hind+Siliguri…` | fonts.googleapis.com / fonts.gstatic.com | Fonts | IMPLEMENTED |
-| `GET /photo-1523906630133-f6934a1ab2b9?...` | images.unsplash.com | Premium Estate Blend image | IMPLEMENTED (licence TBD, A-14) |
-| Local files: `styles.css`, `animations.css`, `app.js`, `animations.js`, `Tea/*.jpg` | same origin | App | IMPLEMENTED |
-
-## 2. Existing internal JavaScript interface (IMPLEMENTED)
-
-These are top-level functions in `app.js` (classic script, global scope). They are the "API" other code and tests should use. Signatures are exactly as in the source.
-
-| Function | Signature | Returns / effect |
-|---|---|---|
-| `formatPrice` | `(n: number) → string` | `formatPrice(1470)` → `"৳1,470"` |
-| `escapeHtml` | `(s: any) → string` | Escapes `& < > " '` |
-| `readJSON` | `(key, fallback) → any` | Parsed `localStorage` value, or `fallback` |
-| `writeJSON` | `(key, value) → void` | Silently ignores storage errors |
-| `readCart` | `() → Array<Product & {qty}>` | Cart joined with `products`; invalid rows dropped |
-| `writeCart` | `(cart: Array<{id, qty}>) → void` | Saves `{id, qty}` only, then `renderCart()` |
-| `addToCart` | `(productId: number) → void` | +1 or new line; toast; count pop |
-| `setQty` | `(productId, qty) → void` | `qty ≤ 0` removes the line |
-| `removeFromCart` | `(productId) → void` | |
-| `clearCart` | `() → void` | |
-| `cartCount` | `(cart?) → number` | Total units |
-| `cartSubtotal` | `(cart?) → number` | Taka |
-| `deliveryFee` | `(subtotal) → number` | `0` if subtotal is 0 or ≥ 1500, else `60` |
-| `applyFilters` | `() → void` | Reads search, sort and `activeCategory`; calls `renderProducts` |
-| `renderProducts` | `(list) → void` | |
-| `renderCategories` | `() → void` | |
-| `renderCart` | `() → void` | |
-| `renderCheckoutSummary` | `() → void` | |
-| `generateOrderId` | `() → string` | `"CB-" + base36(Date.now()) + 2 random base-36 chars` |
-| `showToast` | `(msg: string) → void` | |
-
-### DOM contract (IMPLEMENTED)
-
-`app.js` and `animations.js` find elements by these IDs. **Renaming any of them breaks the app** (see AGENTS.md):
-
-`cart-count`, `free-delivery-amount`, `products`, `searchInput`, `sortSelect`, `category-filters`, `product-grid`, `contactForm`, `contactName`, `contactEmail`, `contactMessage`, `cartOffcanvas`, `cart-items`, `cart-subtotal`, `cart-delivery`, `cart-total`, `checkoutBtn`, `clearCartBtn`, `checkoutModal`, `checkoutForm`, `custName`, `custPhone`, `custEmail`, `custAddress`, `custCity`, `payCod`, `payMobile`, `custNotes`, `checkout-summary`, `confirmModal`, `confirm-order-id`, `confirm-message`, `appToast`, `appToastBody`, `year`.
-
-Classes used as hooks: `.add-to-cart`, `.decrease`, `.increase`, `.remove`, `[data-category]`, `[data-id]`, `#resetFilters`, `.hero-title`, `.hero`, `.chest-face`, `.promises`, `.promise-list`, `.section-title`, `.tea`, `.tea-img`, `.cart-btn`, `.site-nav`, `.confirm`.
-
-## 3. Proposed endpoints
-
-### 3.1 Order and message endpoint: Google Apps Script web app (PROPOSED, P-01 / P-13)
+## 1. Order server endpoint (IMPLEMENTED in `apps-script/Code.gs`; needs deployment)
 
 | Item | Value |
 |---|---|
-| URL | `https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec` (**TBD**) |
-| Method | `POST` |
-| Request content type | `text/plain;charset=utf-8` whose body is a JSON string. This avoids a CORS preflight, which Apps Script can't answer. *Verify during P-01.* |
-| Response | `application/json` from `ContentService` |
-| Auth | None (public web app, "Execute as: me, Access: Anyone"). Abuse controls are in AUTH_SECURITY.md §5 |
-| Idempotency | The client sends a `clientRequestId`; the server ignores duplicates for 10 minutes (PROPOSED) |
+| URL | Your Apps Script web-app URL ending in `/exec`, set as `ORDER_ENDPOINT` in `config.js` (**TBD** until deployed) |
+| Methods | `GET` (health check), `POST` (actions) |
+| Request body | A JSON string sent with `Content-Type: text/plain;charset=utf-8`. Plain text avoids a CORS preflight, which Apps Script can't answer |
+| Response | JSON, always HTTP 200 (Apps Script can't set status codes); check `ok` |
+| Auth | None (public web app, *Execute as: Me*, *Access: Anyone*). Protection is described in AUTH_SECURITY.md §5 |
+| Max body | 10,000 characters |
+| Client timeout | 20 s (`REQUEST_TIMEOUT_MS` in `app.js`) |
 
-#### `action: "order"`: request
+### 1.1 `GET /exec`
+
+```json
+{ "ok": true, "service": "cha-bazaar-orders", "version": "1.0.0" }
+```
+
+### 1.2 `POST { "action": "order" }`
+
+Request (built by `app.js`; only SKUs and quantities are trusted):
 
 ```json
 {
@@ -74,110 +33,169 @@ Classes used as hooks: `.add-to-cart`, `.decrease`, `.increase`, `.remove`, `[da
     "name": "Rahim Uddin",
     "phone": "01712345678",
     "email": "",
-    "address": "House 12, Road 5, Dhanmondi",
-    "city": "Dhaka",
+    "address": "House 12, Road 5, Dhanmondi, Dhaka",
     "notes": "Call when you reach the gate"
   },
-  "zone": "inside_dhaka",
-  "payment": "cash",
+  "area": "inside_dhaka",
+  "payment": "bkash",
+  "promoCode": "",
   "items": [
-    { "id": 2, "qty": 2 },
-    { "id": 3, "qty": 1 }
+    { "sku": "CB-ASSM-200", "qty": 2 },
+    { "sku": "CB-MSLA-200", "qty": 1 }
   ],
+  "expectedTotal": 1240,
+  "lang": "en",
   "website": ""
 }
 ```
 
-- Only `id` and `qty` are sent. **Prices and totals from the client are ignored.**
-- `website` is a honeypot field; it must be empty.
-- `zone` values: `inside_dhaka`, `outside_dhaka` (P-03; rates TBD).
-- `payment` values: `cash`, `bkash`, `nagad` (P-06). All are paid on delivery in Phase 1.
+| Field | Rules (server) |
+|---|---|
+| `clientRequestId` | 8–64 chars `[A-Za-z0-9_-]`. One per checkout attempt; retries reuse it |
+| `customer.name` | 2–80 chars after cleaning |
+| `customer.phone` | Spaces and `+88`/`88` removed, then must match `^01[3-9]\d{8}$` |
+| `customer.email` | Optional; ≤ 120 chars; e-mail format |
+| `customer.address` | 5–300 chars |
+| `customer.notes` | ≤ 300 chars |
+| `area` | A `delivery.zones[].id` from `catalog.js` (`inside_dhaka`, `outside_dhaka`) |
+| `payment` | `cod`, `bkash` or `nagad` |
+| `items` | 1–30 lines; `sku` must exist, have a price and stock; `qty` integer 1–50 (duplicates merged, max 50 per SKU) |
+| `promoCode` | Optional; checked against the `Promos` tab |
+| `expectedTotal` | Optional. If it differs from the server total, the order is **not** saved and `total_changed` is returned |
+| `website` | Honeypot; must be empty |
 
-#### `action: "order"`: success `200`
+Success:
 
 ```json
 {
   "ok": true,
-  "orderId": "CB-20261107-0042",
+  "orderId": "CB-261107-0042",
+  "createdAt": "2026-11-07T14:28:41.123Z",
+  "area": "inside_dhaka",
   "subtotal": 1180,
+  "discount": 0,
   "delivery": 60,
   "total": 1240,
-  "message": "Order placed"
+  "payment": "bkash"
 }
 ```
 
-#### `action: "order"`: errors
+Sending the same `clientRequestId` again within 6 hours returns this same response and writes nothing.
 
-Apps Script web apps always return HTTP 200, so errors are signalled in the body:
-
-```json
-{ "ok": false, "error": "invalid_phone", "field": "phone", "message": "Enter an 11-digit number starting with 01." }
-```
-
-| `error` | Meaning | Client behaviour |
-|---|---|---|
-| `invalid_request` | Malformed JSON or unknown action | Generic error + WhatsApp fallback |
-| `invalid_phone`, `invalid_name`, `invalid_address`, `invalid_city` | Field validation failed | Mark the field invalid and focus it |
-| `invalid_items` | Empty cart, unknown `id`, or `qty` not an integer from 1 to 50 | Ask the shopper to refresh the cart |
-| `rate_limited` | Too many requests | "Please wait a minute and try again." |
-| `server_error` | Unexpected | Generic error + WhatsApp fallback |
-| *(network failure / timeout after 15s)* | — | Generic error + WhatsApp fallback; **don't** empty the cart |
-
-#### `action: "contact"`: request / response
+### 1.3 `POST { "action": "checkPromo" }`
 
 ```json
-{ "action": "contact", "name": "Nadia", "email": "nadia@example.com", "message": "Do you deliver to Sylhet?", "website": "" }
+{ "action": "checkPromo", "code": "EID10", "items": [{ "sku": "CB-PREM-250", "qty": 1 }] }
 ```
 
 ```json
-{ "ok": true, "message": "Message sent" }
+{ "ok": true, "code": "EID10", "discount": 95 }
 ```
 
-#### Example client call (PROPOSED, not in code)
+### 1.4 `POST { "action": "contact" }`
 
-```js
-const res = await fetch(ORDER_ENDPOINT, {
-  method: "POST",
-  headers: { "Content-Type": "text/plain;charset=utf-8" },
-  body: JSON.stringify(payload),
-  signal: AbortSignal.timeout(15000)
-});
-const data = await res.json();
+```json
+{ "action": "contact", "name": "Nadia", "reply": "nadia@example.com", "message": "Do you deliver to Sylhet?", "lang": "en", "website": "" }
 ```
 
-#### Example `curl` (PROPOSED)
+```json
+{ "ok": true }
+```
+
+`reply` must be an e-mail address or a BD mobile number.
+
+### 1.5 Errors
+
+```json
+{ "ok": false, "error": "invalid_phone", "field": "phone" }
+```
+
+| `error` | Meaning | Extra fields | Browser behaviour |
+|---|---|---|---|
+| `invalid_request` | Bad JSON, unknown action, bad `clientRequestId`, oversized | — | Generic error + WhatsApp/phone |
+| `rejected` | Honeypot filled | — | Generic error |
+| `invalid_name` / `invalid_phone` / `invalid_email` / `invalid_address` / `invalid_area` / `invalid_payment` | Field validation | `field` | Marks the field, focuses it |
+| `invalid_reply` / `invalid_message` | Contact form validation | `field` | Error text with alternatives |
+| `invalid_items` | Empty, unknown or unpriced SKU, bad quantity | `sku` (sometimes) | "Something in your cart has changed" |
+| `sold_out` | Pack has `stock: 0` | `sku` | Names the tea |
+| `insufficient_stock` | More than `stock` | `sku`, `available` | Names the tea and how many are left |
+| `invalid_promo` / `promo_min_subtotal` | Promo not valid / subtotal too low | `minSubtotal` | Shown under the promo field |
+| `total_changed` | Server total ≠ `expectedTotal` | `subtotal`, `discount`, `delivery`, `total` | Shows the new total; customer presses Place order again |
+| `rate_limited` | Too many requests | — | "Please wait a few minutes" |
+| `catalog_unavailable` | `CATALOG_URL` unreachable and no cached copy | — | Generic error + WhatsApp/phone |
+| `server_error` | Unexpected exception (see Executions log) | — | Generic error + WhatsApp/phone |
+| *(network error / timeout / HTTP ≠ 200)* | — | — | "We couldn't confirm your order…" + WhatsApp/phone; cart kept; retry is safe |
+
+### 1.6 Example `curl`
 
 ```bash
-curl -L -X POST "https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec" -H "Content-Type: text/plain;charset=utf-8" --data '{"action":"order","customer":{"name":"Test","phone":"01712345678","address":"Road 1","city":"Dhaka"},"zone":"inside_dhaka","payment":"cash","items":[{"id":1,"qty":1}],"website":""}'
+curl -L -H "Content-Type: text/plain;charset=utf-8" --data '{"action":"order","clientRequestId":"test-0001-abcd","customer":{"name":"Test","phone":"01712345678","address":"Road 1, Dhaka"},"area":"inside_dhaka","payment":"cod","items":[{"sku":"CB-ASSM-200","qty":1}],"website":""}' "https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec"
 ```
 
-`-L` is required because Apps Script responds with a redirect.
+`-L` is needed because Apps Script answers with a redirect.
 
-### 3.2 WhatsApp click-to-chat link (PROPOSED, P-02)
+## 2. Links that open other apps (IMPLEMENTED)
 
-This isn't an API call; it's a link that opens WhatsApp:
+| Link | Format | Built by |
+|---|---|---|
+| Phone | `tel:+8801XXXXXXXXX` | `telLink()` in `shared.js` |
+| WhatsApp | `https://wa.me/8801XXXXXXXXX?text=<encoded>` | `whatsappLink(text)` in `shared.js` |
 
-```
-https://wa.me/<WHATSAPP_NUMBER>?text=<url-encoded message>
-```
+WhatsApp messages: a greeting (contact links), the current cart (floating button), the order (checkout failure fallback), or "a question about order CB-…" (confirmation).
 
-Example fallback message (URL-encode before use):
+## 3. Internal JavaScript interface (IMPLEMENTED)
 
-```
-Hi Cha Bazaar, I'd like to order:
-2× Assam Breakfast Blend (200g)
-1× Masala Chai (200g)
-Name: Rahim Uddin
-Phone: 01712345678
-Address: House 12, Road 5, Dhanmondi, Dhaka
-```
+Classic scripts; top-level functions are globals in this order: `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `animations.js`.
 
-`WHATSAPP_NUMBER` is in international format without `+`, e.g. `8801XXXXXXXXX` (**TBD**, PRD Q-2).
+| File | Function | Purpose |
+|---|---|---|
+| `i18n.js` | `t(key, vars?, fallback?)`, `getLang()`, `applyI18n(root?)` | Translations |
+| `shared.js` | `isSet(v)` | Config value set (not empty, not `YOUR_…`) |
+| | `formatPrice(n)` | `৳1,470` |
+| | `escapeHtml(s)`, `readJSON`, `writeJSON`, `removeKey` | Helpers |
+| | `intlNumber(n)`, `displayNumber(n)`, `telLink()`, `whatsappLink(text)` | Phone links |
+| | `zoneById(id)`, `deliveryFee(subtotal, zoneId)` | Delivery (same rule as `deliveryFee_` in `Code.gs`) |
+| | `setLang(lang)` | Switch language; fires `cha:lang` |
+| `analytics.js` | `chaTrack(name, props)` | No-op unless analytics is configured |
+| `app.js` | `readCart()` | `[{ sku, qty, product, variant, price, lineTotal }]` (invalid or unbuyable rows dropped) |
+| | `addToCart(sku, qty?)`, `setQty(sku, qty)`, `removeFromCart(sku)`, `clearCart()` | Cart |
+| | `cartCount()`, `cartSubtotal()` | Totals |
+| | `defaultVariant(p)`, `pricedVariants(p)`, `unitPrice(v)`, `stockState(v)`, `isBuyable(v)` | Catalogue |
+| | `applyFilters()`, `renderCart()`, `openQuickView(p)`, `routeFromHash()` | UI |
+| | `postToServer(payload)` | POST to `ORDER_ENDPOINT` with timeout |
 
-### 3.3 Online payment API (PROPOSED, Phase 4, needs approval)
+Events: `cha:lang` (on `document`) after a language change.
 
-bKash and Nagad online checkout need **server-side** merchant credentials and callbacks, so they can't be done safely from a static site. No endpoint is defined until the owner approves a back end (PLAN.md Phase 4, P-22). See INTEGRATIONS.md.
+### DOM contract
 
-## 4. Versioning
+Renaming any of these breaks the scripts (see AGENTS.md).
 
-TBD. Phase 1 has a single Apps Script deployment; publishing a new deployment changes the URL, so update `ORDER_ENDPOINT` in the same commit.
+- **Shop:** `cart-count`, `searchInput`, `sortSelect`, `category-filters`, `product-grid`, `samplers`, `sampler-grid`, `trust`, `reviews`, `reviews-summary`, `review-list`, `products`
+- **Contact:** `contactForm`, `contactName`, `contactEmail`, `contactMessage`, `contactWebsite`, `contact-status`
+- **Cart:** `cartOffcanvas`, `cart-items`, `recent-orders`, `cart-subtotal`, `cart-delivery`, `cart-total`, `cart-total-label`, `checkoutBtn`, `clearCartBtn`
+- **Quick view:** `teaModal`, `teaModalTitle`, `teaModalBody`
+- **Checkout:** `checkoutModal`, `checkoutForm`, `custName`, `custPhone`, `custEmail`, `areaGroup`, `area-options`, `custAddress`, `paymentGroup`, `pay-instructions`, `custNotes`, `rememberMe`, `forgetMe`, `custWebsite`, `checkout-summary`, `promoCode`, `applyPromo`, `promo-status`, `checkout-error`, `placeOrderBtn`
+- **Confirmation:** `confirmModal`, `confirm-order-id`, `confirm-message`, `confirm-payment`, `confirm-whatsapp`
+- **Other:** `waFloat`, `sr-status`, `appToast`, `appToastBody`, `year`
+
+Attribute hooks:
+
+- **Text and links:** `data-i18n`, `data-i18n-attr`, `data-fill`, `data-fill-table`, `data-contact`, `data-link`, `data-lang-toggle`, `data-lang-block`
+- **Cart and filter controls:** `data-sku`, `data-category`, `data-reorder`, `data-qv-qty`
+
+Removed in v2: `custCity`, `payCod`, `payMobile`, `free-delivery-amount` (replaced by delivery areas, payment values `cod/bkash/nagad`, and `data-fill`).
+
+## 4. Static files fetched by the server (IMPLEMENTED)
+
+The server downloads `CATALOG_URL` (your live `catalog.js`) with a cache-busting `?v=` parameter, caches it for 10 minutes, and keeps a 6-hour backup copy.
+
+## 5. Proposed
+
+| Item | Status |
+|---|---|
+| Online payment APIs (bKash/Nagad merchant checkout) | PROPOSED; needs its own server (PLAN Phase 4, P-22) |
+| Endpoint to read live stock from the Sheet | PROPOSED; stock currently lives in `catalog.js` |
+
+## 6. Versioning
+
+`VERSION` in `Code.gs` (currently `1.0.0`). Update the deployment with **Manage deployments → Edit → New version** to keep the same URL.

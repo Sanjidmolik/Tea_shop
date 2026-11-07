@@ -3,7 +3,7 @@
 > Status legend: **IMPLEMENTED** · **PROPOSED** · **TBD** (see [PRD.md](PRD.md)).
 > Related: [PRD.md](PRD.md) §9 (audit) · [FEATURES.md](FEATURES.md) (steps and acceptance criteria) · [AGENTS.md](AGENTS.md)
 >
-> Nothing in this plan has started. Each phase begins only after the owner confirms it.
+> **Status 2026-11-07 (v2):** Phases 1–3 are implemented in code, except P-14 (owner action) and the CSP part of P-24. What remains is mostly **owner input and deployment**: see §3 (inputs) and the launch checklist in §10. Phase 4 is still not approved.
 
 ## 1. Where we are
 
@@ -86,7 +86,7 @@ Order matters: P-01 first because it carries the most risk.
 
 | ID | Item | Why it needs approval |
 |---|---|---|
-| P-22 | Own API server and database (DATABASE.md §3.3); online bKash/Nagad payment | Changes the stack; costs money; handles payments and credentials |
+| P-22 | Own API server and database (DATABASE.md §5); online bKash/Nagad payment | Changes the stack; costs money; handles payments and credentials |
 
 ## 8. Risks
 
@@ -101,3 +101,18 @@ Order matters: P-01 first because it carries the most risk.
 ## 9. Tracking
 
 Feature statuses live in FEATURES.md. When an item ships, update its status to IMPLEMENTED in FEATURES.md, PRD.md §4 and this plan in the same commit (AGENTS.md §3, step 7).
+
+
+## 10. Launch checklist (after v2)
+
+| # | Task | Who | Guide |
+|---|---|---|---|
+| 1 | Create the Google Sheet, paste `Code.gs`, set `CATALOG_URL` and `OWNER_EMAIL`, run `setup` and `checkSetup`, deploy the web app | Owner | [apps-script/README.md](apps-script/README.md) |
+| 2 | Fill `config.js`: `ORDER_ENDPOINT`, `BUSINESS_PHONE`, `WHATSAPP_NUMBER`, `FACEBOOK_URL`, `BUSINESS_EMAIL`, `BKASH_NUMBER`/`NAGAD_NUMBER` and account types, address, hours, `RETURN_WINDOW_DAYS` | Owner | [SETUP.md](SETUP.md) §7 |
+| 3 | Confirm prices, pack sizes, grades, origins, tasting notes and ingredients in `catalog.js`; add prices for extra pack sizes if wanted | Owner | `catalog.js` header |
+| 4 | Decide whether free delivery over ৳1,500 also applies outside Dhaka (currently no) | Owner | `catalog.js` `freeOver` |
+| 5 | Review the four policy pages (English and Bangla) | Owner | `delivery.html` etc. |
+| 6 | Native-speaker check of the Bangla text | Owner | `i18n.js`, policy pages |
+| 7 | Confirm photo licences or replace photos; host the Premium image locally (P-14) | Owner | `npm run images` |
+| 8 | Publish with GitHub Pages; place a real test order from a phone; delete test rows | Owner | README "Deploy" |
+| 9 | Optional: analytics provider, promo codes, genuine reviews, sampler bundle | Owner | FEATURES.md notes |
