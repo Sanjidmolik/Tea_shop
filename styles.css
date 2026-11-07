@@ -1,6 +1,15 @@
-/* Basic tweaks */
 :root {
-  --card-img-h: 180px;
+  --card-img-h: 200px;
+  --brand: #198754;
+}
+
+html { scroll-behavior: smooth; }
+
+/* Offset anchor targets for the sticky navbar */
+section[id], main[id], header[id] { scroll-margin-top: 70px; }
+
+.hero {
+  background: linear-gradient(135deg, #f3faf5 0%, #fdf8ef 100%);
 }
 
 .card-img-top {
@@ -8,23 +17,34 @@
   object-fit: cover;
 }
 
-.badge.price {
-  font-weight: 600;
+.product-card {
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .12) !important;
 }
 
-.quantity-control .btn {
-  width: 2.2rem;
-}
+.price { color: var(--brand); }
 
-#product-grid .col { display: flex; }
+.quantity-control .btn { width: 2rem; }
+
+.object-fit-cover { object-fit: cover; }
+
+.about-img {
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+}
 
 footer { background: #fff; }
 
-/* Optional util for cart thumbnails */
-.object-fit-cover { object-fit: cover; }
-
-/* Improve focus styles for accessibility */
 :focus-visible {
-  outline: 3px dashed #198754;
+  outline: 3px dashed var(--brand);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .product-card { transition: none; }
 }
