@@ -9,24 +9,32 @@ const ORDERS_KEY = "tea-shop-orders";
 
 // ---- Data ----
 const products = [
-  { id: 1, name: "Darjeeling First Flush", category: "Black", weight: "100g", price: 650,
-    description: "Delicate, floral spring harvest with a muscatel finish.", image: "Tea/darjeeling.jpg" },
-  { id: 2, name: "Assam Breakfast Blend", category: "Black", weight: "200g", price: 380,
-    description: "Bold, malty and brisk — perfect with milk.", image: "Tea/Assam_Tea.jpg" },
-  { id: 3, name: "Masala Chai", category: "Spiced", weight: "200g", price: 420,
-    description: "Black tea with cardamom, ginger, cinnamon and clove.", image: "Tea/Masala_tea.jpg" },
-  { id: 4, name: "Green Tea", category: "Green", weight: "100g", price: 450,
-    description: "Fresh, grassy and light. Rich in antioxidants.", image: "Tea/Green-Tea-Leaves-2.jpg" },
-  { id: 5, name: "Jasmine Green Tea", category: "Green", weight: "100g", price: 520,
-    description: "Green tea scented with fresh jasmine blossoms.", image: "Tea/Loose_Jasmine_Tea_Leaves.jpg" },
-  { id: 6, name: "Premium Blend Tea", category: "Black", weight: "250g", price: 950,
-    description: "Our signature estate blend for a rich, smooth cup.",
+  { id: 1, name: "Darjeeling First Flush", category: "Black", grade: "FTGFOP1", origin: "Darjeeling, India",
+    weight: "100g", price: 650, brew: { temp: 85, mins: 3 },
+    description: "Spring's first picking. Light, floral and bright, with a muscatel finish.", image: "Tea/darjeeling.jpg" },
+  { id: 2, name: "Assam Breakfast Blend", category: "Black", grade: "BOP", origin: "Assam, India",
+    weight: "200g", price: 380, brew: { temp: 100, mins: 4 },
+    description: "Bold and malty. Strong enough to take milk and sugar.", image: "Tea/Assam_Tea.jpg" },
+  { id: 3, name: "Masala Chai", category: "Spiced", grade: "CTC", origin: "Sylhet, Bangladesh",
+    weight: "200g", price: 420, brew: { temp: 100, mins: 5 },
+    description: "Sylhet CTC with cardamom, ginger, cinnamon and clove. Simmer with milk.", image: "Tea/Masala_tea.jpg" },
+  { id: 4, name: "Green Tea", category: "Green", grade: "Leaf", origin: "Sylhet, Bangladesh",
+    weight: "100g", price: 450, brew: { temp: 80, mins: 2 },
+    description: "Fresh and grassy, with a clean, light cup. Don't use boiling water.", image: "Tea/Green-Tea-Leaves-2.jpg" },
+  { id: 5, name: "Jasmine Green Tea", category: "Green", grade: "Leaf", origin: "Fujian, China",
+    weight: "100g", price: 520, brew: { temp: 80, mins: 3 },
+    description: "Green tea layered with jasmine blossoms until it takes on their scent.", image: "Tea/Loose_Jasmine_Tea_Leaves.jpg" },
+  { id: 6, name: "Premium Estate Blend", category: "Black", grade: "OP", origin: "Sylhet and Assam",
+    weight: "250g", price: 950, brew: { temp: 95, mins: 4 },
+    description: "Our house blend of long-leaf Sylhet and Assam. Smooth and full without bitterness.",
     image: "https://images.unsplash.com/photo-1523906630133-f6934a1ab2b9?q=80&w=1000&auto=format&fit=crop" },
-  { id: 7, name: "Chamomile Calm", category: "Herbal", weight: "50g", price: 480,
-    description: "Caffeine-free chamomile flowers for a relaxing evening.",
+  { id: 7, name: "Chamomile Calm", category: "Herbal", grade: "Whole flower", origin: "Egypt",
+    weight: "50g", price: 480, brew: { temp: 100, mins: 5 },
+    description: "Whole chamomile flowers. Caffeine-free, for the evening.",
     image: "Tea/calming-herbal-tea-blend-chamomile-600nw-2568834187.jpg" },
-  { id: 8, name: "Mixed Tea", category: "Black", weight: "200g", price: 350,
-    description: "An everyday blend of leaf and dust for a strong cup.", image: "Tea/MIX_tea.jpg" }
+  { id: 8, name: "Everyday Mixed Tea", category: "Black", grade: "CTC", origin: "Sylhet, Bangladesh",
+    weight: "200g", price: 350, brew: { temp: 100, mins: 3 },
+    description: "The strong, quick-brewing tea of every Dhaka tea stall.", image: "Tea/MIX_tea.jpg" }
 ];
 
 // ---- Helpers ----
@@ -69,7 +77,10 @@ const addToCart = (productId) => {
   else cart.push({ id: productId, qty: 1 });
   writeCart(cart);
   const p = products.find((p) => p.id === productId);
-  showToast(`${p.name} added to cart`);
+  showToast(`Added to cart: ${p.name}`);
+  cartCountEl.classList.remove("bump");
+  void cartCountEl.offsetWidth; // restart the animation
+  cartCountEl.classList.add("bump");
 };
 
 const setQty = (productId, qty) => {
@@ -93,36 +104,39 @@ let activeCategory = "All";
 
 const renderCategories = () => {
   const cats = ["All", ...new Set(products.map((p) => p.category))];
-  categoryEl.innerHTML = cats
-    .map((c) => `<button type="button" class="btn btn-sm ${c === activeCategory ? "btn-success" : "btn-outline-success"}"
-      data-category="${escapeHtml(c)}" aria-pressed="${c === activeCategory}">${escapeHtml(c)}</button>`)
-    .join("");
+  categoryEl.innerHTML = cats.map((c) => {
+    const n = c === "All" ? products.length : products.filter((p) => p.category === c).length;
+    return `<button type="button" class="category-tab" data-category="${escapeHtml(c)}"
+      aria-pressed="${c === activeCategory}">${escapeHtml(c)}<span class="count">${n}</span></button>`;
+  }).join("");
 };
 
 const renderProducts = (list) => {
   if (!list.length) {
-    grid.innerHTML = '<div class="col-12"><div class="alert alert-warning w-100">No teas match your search.</div></div>';
+    grid.innerHTML = `<div class="col-12"><div class="empty-state">
+      <p class="mb-2">No teas match “${escapeHtml(searchInput.value.trim())}”${activeCategory !== "All" ? ` in ${escapeHtml(activeCategory)}` : ""}.</p>
+      <button type="button" class="btn btn-outline-garden btn-sm" id="resetFilters">Show all teas</button>
+    </div></div>`;
     return;
   }
   grid.innerHTML = list.map((p) => `
     <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <div class="card h-100 shadow-sm product-card">
-        <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="card-img-top" loading="lazy">
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-            <h5 class="card-title mb-0">${escapeHtml(p.name)}</h5>
-            <span class="badge text-bg-light border">${escapeHtml(p.category)}</span>
+      <article class="tea">
+        <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="tea-img" loading="lazy">
+        <div class="tea-body">
+          <p class="tea-grade"><span class="grade">${escapeHtml(p.grade)}</span><span class="origin">${escapeHtml(p.origin)}</span></p>
+          <h3 class="tea-name">${escapeHtml(p.name)}</h3>
+          <p class="tea-desc">${escapeHtml(p.description)}</p>
+          <ul class="tea-brew" aria-label="Brewing guide">
+            <li><i class="bi bi-thermometer-half" aria-hidden="true"></i>${p.brew.temp}°C</li>
+            <li><i class="bi bi-hourglass-split" aria-hidden="true"></i>${p.brew.mins} min</li>
+          </ul>
+          <div class="tea-buy">
+            <p class="tea-price mb-0">${formatPrice(p.price)}<small>per ${escapeHtml(p.weight)}</small></p>
+            <button class="btn btn-garden add-to-cart" data-id="${p.id}" aria-label="Add ${escapeHtml(p.name)} to cart">Add to cart</button>
           </div>
-          <p class="card-text text-muted small mb-3">${escapeHtml(p.description)}</p>
-          <div class="d-flex justify-content-between align-items-center mb-3 mt-auto">
-            <span class="fs-5 fw-bold price">${formatPrice(p.price)}</span>
-            <span class="text-muted small">${escapeHtml(p.weight)}</span>
-          </div>
-          <button class="btn btn-success add-to-cart" data-id="${p.id}">
-            <i class="bi bi-bag-plus me-1"></i> Add to Cart
-          </button>
         </div>
-      </div>
+      </article>
     </div>`).join("");
 };
 
@@ -158,36 +172,42 @@ const renderCart = () => {
 
   if (!cart.length) {
     cartItemsEl.innerHTML = `
-      <div class="text-center text-muted py-5">
-        <i class="bi bi-basket fs-1 d-block mb-2"></i>
+      <div class="cart-empty">
+        <i class="bi bi-bag d-block mb-2" aria-hidden="true"></i>
         <p>Your cart is empty.</p>
+        <button type="button" class="btn btn-outline-garden" data-bs-dismiss="offcanvas">Browse the teas</button>
       </div>`;
     return;
   }
 
   const remaining = FREE_DELIVERY_THRESHOLD - subtotal;
-  const deliveryNote = remaining > 0
-    ? `<div class="alert alert-info py-2 small mb-0">Add ${formatPrice(remaining)} more for free delivery.</div>`
-    : `<div class="alert alert-success py-2 small mb-0"><i class="bi bi-truck me-1"></i>You get free delivery!</div>`;
+  const progress = Math.min(100, Math.round((subtotal / FREE_DELIVERY_THRESHOLD) * 100));
+  const deliveryNote = `
+    <div class="delivery-note">
+      ${remaining > 0
+        ? `Add ${formatPrice(remaining)} more for free delivery.`
+        : `Your order ships free.`}
+      <div class="delivery-bar" aria-hidden="true"><span style="width:${progress}%"></span></div>
+    </div>`;
 
   cartItemsEl.innerHTML = deliveryNote + cart.map((item) => `
-    <div class="d-flex align-items-center gap-3 border rounded p-2">
-      <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" width="64" height="64" class="rounded object-fit-cover">
-      <div class="flex-grow-1">
-        <div class="d-flex justify-content-between align-items-start">
+    <div class="cart-item">
+      <img src="${escapeHtml(item.image)}" alt="">
+      <div>
+        <div class="d-flex justify-content-between align-items-start gap-2">
           <div>
-            <strong>${escapeHtml(item.name)}</strong>
-            <div class="text-muted small">${formatPrice(item.price)} · ${escapeHtml(item.weight)}</div>
+            <div class="cart-item-name">${escapeHtml(item.name)}</div>
+            <div class="cart-item-meta">${formatPrice(item.price)} per ${escapeHtml(item.weight)}</div>
           </div>
-          <button class="btn btn-sm btn-outline-secondary remove" data-id="${item.id}" aria-label="Remove ${escapeHtml(item.name)}">
-            <i class="bi bi-x-lg"></i>
+          <button class="remove" data-id="${item.id}" aria-label="Remove ${escapeHtml(item.name)}">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2">
-          <div class="btn-group btn-group-sm quantity-control" role="group" aria-label="Quantity of ${escapeHtml(item.name)}">
-            <button class="btn btn-outline-secondary decrease" data-id="${item.id}" aria-label="Decrease quantity">−</button>
-            <span class="px-3 d-flex align-items-center border-top border-bottom">${item.qty}</span>
-            <button class="btn btn-outline-secondary increase" data-id="${item.id}" aria-label="Increase quantity">+</button>
+          <div class="qty" role="group" aria-label="Quantity of ${escapeHtml(item.name)}">
+            <button class="decrease" data-id="${item.id}" aria-label="One less">−</button>
+            <span>${item.qty}</span>
+            <button class="increase" data-id="${item.id}" aria-label="One more">+</button>
           </div>
           <span class="fw-semibold">${formatPrice(item.price * item.qty)}</span>
         </div>
@@ -203,7 +223,7 @@ const applyFilters = () => {
   const q = searchInput.value.trim().toLowerCase();
   const list = products.filter((p) =>
     (activeCategory === "All" || p.category === activeCategory) &&
-    [p.name, p.category, p.description].some((s) => s.toLowerCase().includes(q))
+    [p.name, p.category, p.description, p.grade, p.origin].some((s) => s.toLowerCase().includes(q))
   );
 
   switch (sortSelect.value) {
@@ -219,6 +239,13 @@ const applyFilters = () => {
 
 searchInput.addEventListener("input", applyFilters);
 sortSelect.addEventListener("change", applyFilters);
+grid.addEventListener("click", (e) => {
+  if (!e.target.closest("#resetFilters")) return;
+  searchInput.value = "";
+  activeCategory = "All";
+  renderCategories();
+  applyFilters();
+});
 categoryEl.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-category]");
   if (!btn) return;
@@ -245,7 +272,7 @@ cartItemsEl.addEventListener("click", (e) => {
 });
 
 clearCartBtn.addEventListener("click", () => {
-  if (confirm("Remove all items from your cart?")) clearCart();
+  if (confirm("Empty your cart? This removes every tea in it.")) clearCart();
 });
 
 // ---- Checkout ----
@@ -260,16 +287,9 @@ const renderCheckoutSummary = () => {
   const subtotal = cartSubtotal(cart);
   const delivery = deliveryFee(subtotal);
   checkoutSummaryEl.innerHTML = cart.map((i) => `
-      <li class="list-group-item d-flex justify-content-between">
-        <span>${escapeHtml(i.name)} <span class="text-muted">× ${i.qty}</span></span>
-        <span>${formatPrice(i.price * i.qty)}</span>
-      </li>`).join("") + `
-      <li class="list-group-item d-flex justify-content-between text-muted">
-        <span>Delivery</span><span>${delivery ? formatPrice(delivery) : "Free"}</span>
-      </li>
-      <li class="list-group-item d-flex justify-content-between fw-bold">
-        <span>Total</span><span>${formatPrice(subtotal + delivery)}</span>
-      </li>`;
+      <li><span>${escapeHtml(i.name)} × ${i.qty}</span><span>${formatPrice(i.price * i.qty)}</span></li>`).join("") + `
+      <li class="muted"><span>Delivery</span><span>${delivery ? formatPrice(delivery) : "Free"}</span></li>
+      <li class="total"><span>Total to pay</span><span>${formatPrice(subtotal + delivery)}</span></li>`;
 };
 
 checkoutBtn.addEventListener("click", () => {
@@ -323,7 +343,7 @@ checkoutForm.addEventListener("submit", (e) => {
 
   document.getElementById("confirm-order-id").textContent = order.id;
   document.getElementById("confirm-message").textContent =
-    `We'll call ${order.customer.phone} to confirm delivery. Amount due: ${formatPrice(order.total)} (${order.payment.toLowerCase()}).`;
+    `We'll call ${order.customer.phone} to confirm a delivery time. Pay ${formatPrice(order.total)} by ${order.payment === "Mobile banking" ? "mobile banking" : "cash"} when it arrives.`;
 
   checkoutModal.hide();
   confirmModal.show();
@@ -339,7 +359,7 @@ contactForm.addEventListener("submit", (e) => {
   }
   contactForm.reset();
   contactForm.classList.remove("was-validated");
-  showToast("Thanks! We'll get back to you soon.");
+  showToast("Message sent. We usually reply within a day.");
 });
 
 // ---- Sync cart across tabs ----
