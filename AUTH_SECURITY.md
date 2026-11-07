@@ -22,7 +22,26 @@
 
 Adding customer login is a stack change and needs owner approval (AGENTS.md §1).
 
-## 2. Current security posture (IMPLEMENTED)
+## 2. Current security posture (IMPLEMENTED, v2)
+
+| Control | Where |
+|---|---|
+| Server-side validation of every order and message field | `Code.gs` `handleOrder_`, `handleContact_` |
+| Prices, delivery and discounts recalculated on the server from the live `catalog.js`; client totals only compared, never trusted | `Code.gs` `priceItems_`, `deliveryFee_`, `evaluatePromo_` |
+| Duplicate-submission protection (`clientRequestId`, 6 h) + button disabled while sending + `LockService` | `Code.gs`, `app.js` `setSubmitting` |
+| Honeypot field on checkout and contact forms | `custWebsite`, `contactWebsite` |
+| Rate limits: 3 orders per phone, 3 messages per sender, 120 requests per 10 min | `Code.gs` `LIMITS` |
+| Request size limit 10,000 characters; quantity 1–50; 30 lines | `Code.gs` |
+| Spreadsheet formula injection neutralised | `Code.gs` `cell_` |
+| Minimal OAuth scopes (this spreadsheet, URL fetch, send mail) | `apps-script/appsscript.json` |
+| No secrets in the website; server settings in script properties | `config.js` is public by design |
+| SRI hashes + `crossorigin` on Bootstrap and Bootstrap Icons | all HTML pages |
+| No personal data in local order history; old entries stripped; saved details only with opt-in and removable | `app.js` `readHistory`, `rememberMe` |
+| Output escaping of all dynamic text | `escapeHtml` |
+| "Order placed" only after server `ok:true` | `app.js` checkout submit |
+| Analytics never receives personal data; GA4 only after consent | `analytics.js` |
+
+### Earlier posture (v1, for reference)
 
 | Control | Where | Notes |
 |---|---|---|
@@ -37,13 +56,13 @@ Adding customer login is a stack change and needs owner approval (AGENTS.md §1)
 
 | # | Weakness | Risk | Fix |
 |---|---|---|---|
-| W-1 | Full personal data (name, phone, address) is kept indefinitely in `localStorage` | Anyone using the same device can read it | P-01 step 6; privacy policy (P-04) |
-| W-2 | CDN scripts have no `integrity` attribute | A compromised CDN could inject code | P-24 |
+| W-1 | ~~Full personal data kept in `localStorage`~~ | — | **Fixed in v2** (history has IDs and totals only; opt-in saved details) |
+| W-2 | ~~CDN scripts have no `integrity` attribute~~ | — | **Fixed in v2** (SRI) |
 | W-3 | No Content-Security-Policy | Limits defence in depth against XSS | P-24 |
-| W-4 | Prices and totals are calculated in the browser | Harmless today; unsafe once orders are sent | Server recalculation (P-01, FR-22) |
+| W-4 | ~~Prices calculated only in the browser~~ | — | **Fixed in v2** (server re-pricing) |
 | W-5 | Images are hotlinked from Unsplash | Privacy (third-party request) and availability | P-14 |
 
-## 3. Validation rules
+## 3. Validation rules (v2: the "Server" column is IMPLEMENTED in `Code.gs`; city was replaced by delivery area)
 
 | Field | Client (IMPLEMENTED) | Server (PROPOSED, P-01) |
 |---|---|---|
@@ -54,7 +73,7 @@ Adding customer login is a stack change and needs owner approval (AGENTS.md §1)
 | City | required | 2–60 chars (replaced by the zone in P-03) |
 | Notes | optional | ≤ 300 chars |
 | Items | from the cart | 1–30 lines; `id` in the price list; `qty` an integer from 1 to 50 |
-| Zone, payment | — | Must be one of the allowed values (API.md §3.1) |
+| Zone, payment | — | Must be one of the allowed values (API.md §1) |
 | Honeypot `website` | hidden field, empty | Must be empty, otherwise reject silently |
 
 **Spreadsheet formula injection (PROPOSED):** before writing to the Sheet, the server prefixes any value starting with `=`, `+`, `-` or `@` with `'`. This stops a malicious "name" from running as a formula when the owner opens the Sheet.
@@ -78,7 +97,7 @@ frame-ancestors 'none'
 
 3. Add `rel="noopener"` to any future `target="_blank"` links (WhatsApp, Facebook).
 
-## 5. Protecting the proposed order endpoint (P-01)
+## 5. Protecting the order endpoint (IMPLEMENTED in v2)
 
 The Apps Script web app is public, so anyone can send requests to it.
 

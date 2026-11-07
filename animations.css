@@ -21,17 +21,8 @@
 
 .btn { transition: background-color .2s ease, border-color .2s ease, transform .15s ease; }
 .btn:active { transform: scale(.97); }
-.add-to-cart.added { --bs-btn-bg: var(--liquor); --bs-btn-border-color: var(--liquor); }
 
-/* Fly-to-cart clone */
-.fly-img {
-  position: fixed;
-  z-index: 3000;
-  object-fit: cover;
-  border-radius: 6px;
-  pointer-events: none;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, .3);
-}
+
 
 @media (prefers-reduced-motion: no-preference) {
 
@@ -124,6 +115,8 @@
     white-space: nowrap;
     padding-right: 3.5rem;
   }
+  .motion-paused .leaf,
+  .motion-paused .promises.ticker .promise-list { animation-play-state: paused; }
   .promises.ticker:hover .promise-list,
   .promises.ticker:focus-within .promise-list { animation-play-state: paused; }
   @keyframes ticker {

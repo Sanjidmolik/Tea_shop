@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Template for og-image.jpg (1200x630). Re-render with: node tools/render-og-image.js -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="../styles.css" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+    .og { display: grid; grid-template-columns: 1fr 520px; align-items: center; gap: 48px;
+          width: 1200px; height: 630px; padding: 64px 72px; box-sizing: border-box; background: var(--garden); color: var(--paper); }
+    .og .wordmark { font-size: 40px; color: var(--paper); }
+    .og h1 { margin: 28px 0 20px; font-size: 76px; }
+    .og p { margin: 0; font-size: 26px; line-height: 1.4; color: rgba(241,244,236,.85); }
+    .og .chest { transform: rotate(-3deg); max-width: 520px; }
+  </style>
+</head>
+<body>
+  <div class="og">
+    <div>
+      <span class="wordmark">Cha Bazaar</span>
+      <h1 class="hero-title">Garden tea, packed fresh every week</h1>
+      <p>Estate teas from Sylhet, Assam and Darjeeling. Delivered across Bangladesh.</p>
+    </div>
+    <figure class="chest">
+      <div class="chest-face">
+        <span class="stamp stamp-mark">চা</span>
+        <span class="stamp stamp-name">Cha Bazaar</span>
+        <span class="stamp stamp-origin">Sylhet, Bangladesh</span>
+        <span class="stamp stamp-produce">Garden fresh. Keep dry.</span>
+        <dl class="stamp stamp-specs">
+          <div><dt>Grade</dt><dd>BOP</dd></div>
+          <div><dt>Nett</dt><dd>40 kg</dd></div>
+          <div><dt>Chest</dt><dd>0428</dd></div>
+        </dl>
+      </div>
+    </figure>
+  </div>
+</body>
+</html>

@@ -1,195 +1,131 @@
 # DATABASE — Cha Bazaar Data Structures
 
 > Status legend: **IMPLEMENTED** · **PROPOSED** · **TBD** (see [PRD.md](PRD.md)).
-> Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [API.md](API.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md)
+> Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [API.md](API.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md) · [apps-script/README.md](apps-script/README.md)
 
-**Cha Bazaar has no database server.** Every implemented structure below lives either in JavaScript memory or in the visitor's browser (`localStorage`). Each visitor has their own separate copy, and the shop owner can't see it.
+There is no database server. Data lives in three places:
 
-## 1. Implemented structures
-
-### 1.1 Product catalogue: in-memory array (IMPLEMENTED)
-
-Defined as `const products` in `app.js` (lines 11–38). It's read-only at runtime; changing it needs a code edit.
-
-| Field | Type | Example | Notes |
-|---|---|---|---|
-| `id` | integer | `1` | Unique; referenced by the cart |
-| `name` | string | `"Darjeeling First Flush"` | |
-| `category` | string | `"Black"` | One of `Black`, `Spiced`, `Green`, `Herbal`; drives the filter tabs |
-| `grade` | string | `"FTGFOP1"` | Tea grade code shown in amber stencil |
-| `origin` | string | `"Darjeeling, India"` | |
-| `weight` | string | `"100g"` | Display only; not parsed (P-05 proposes a numeric field) |
-| `price` | number (taka) | `650` | Price per pack |
-| `brew.temp` | number (°C) | `85` | |
-| `brew.mins` | number | `3` | |
-| `description` | string | | One or two sentences |
-| `image` | string (URL or path) | `"Tea/darjeeling.jpg"` | Product 6 uses an external Unsplash URL |
-
-Current rows (prices, grades and origins are **TBD until the owner confirms them**, PRD Q-6):
-
-| id | name | category | grade | weight | price ৳ |
-|---|---|---|---|---|---|
-| 1 | Darjeeling First Flush | Black | FTGFOP1 | 100g | 650 |
-| 2 | Assam Breakfast Blend | Black | BOP | 200g | 380 |
-| 3 | Masala Chai | Spiced | CTC | 200g | 420 |
-| 4 | Green Tea | Green | Leaf | 100g | 450 |
-| 5 | Jasmine Green Tea | Green | Leaf | 100g | 520 |
-| 6 | Premium Estate Blend | Black | OP | 250g | 950 |
-| 7 | Chamomile Calm | Herbal | Whole flower | 50g | 480 |
-| 8 | Everyday Mixed Tea | Black | CTC | 200g | 350 |
-
-### 1.2 Cart: `localStorage["tea-shop-cart"]` (IMPLEMENTED)
-
-JSON array of line items. Only the ID and quantity are stored; details are joined from `products` when read.
-
-```json
-[
-  { "id": 1, "qty": 1 },
-  { "id": 3, "qty": 2 }
-]
-```
-
-| Field | Type | Rules (enforced in `readCart()`) |
+| Where | What | Who can see it |
 |---|---|---|
-| `id` | integer | Must exist in `products`, otherwise the row is dropped |
-| `qty` | integer | Must be an integer > 0, otherwise the row is dropped |
+| `catalog.js` (in the repository) | Products, pack sizes, prices, stock, delivery zones, reviews | Public |
+| Google Sheet "Cha Bazaar Orders" | Orders, order lines, website messages, promo codes | Owner only |
+| Visitor's browser (`localStorage`) | Cart, delivery area, language, recent order IDs, opt-in saved details | That visitor only |
 
-- Written by `writeCart()` on every change; read on every render.
-- Corrupt JSON or blocked storage returns `[]` (wrapped in try/catch).
-- Changes made in another tab arrive through the `storage` event and trigger a re-render.
+## 1. Catalogue: `catalog.js` (IMPLEMENTED)
 
-### 1.3 Orders: `localStorage["tea-shop-orders"]` (IMPLEMENTED, local only)
-
-JSON array; each order is appended by the checkout submit handler. ⚠ It contains personal data and **is never sent to the owner** (A-01).
-
-```json
-[
-  {
-    "id": "CB-MW6UYNR8U2",
-    "createdAt": "2026-11-07T20:28:41.123Z",
-    "customer": {
-      "name": "Rahim Uddin",
-      "phone": "01712345678",
-      "email": "",
-      "address": "House 12, Road 5, Dhanmondi",
-      "city": "Dhaka",
-      "notes": "Call when you reach the gate"
-    },
-    "payment": "Cash on delivery",
-    "items": [
-      { "id": 2, "name": "Assam Breakfast Blend", "price": 380, "qty": 2 }
-    ],
-    "subtotal": 760,
-    "delivery": 60,
-    "total": 820
-  }
-]
-```
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | string | `CB-` + base-36 timestamp + 2 random base-36 characters. Unique per browser; global uniqueness is **not guaranteed** |
-| `createdAt` | ISO 8601 string | Customer's clock |
-| `customer.*` | strings | Trimmed; `phone` has spaces and dashes removed |
-| `payment` | string | `"Cash on delivery"` or `"Mobile banking"` |
-| `items[]` | array | Name and price copied at order time |
-| `subtotal`, `delivery`, `total` | numbers (taka) | Calculated in the browser |
-
-### 1.4 Other browser state (IMPLEMENTED, not persisted)
-
-| State | Where | Notes |
-|---|---|---|
-| `activeCategory` | `app.js` variable | Resets to "All" on reload |
-| Search text, sort option | DOM inputs | Reset on reload |
-| Contact-form messages | Not stored at all | Discarded after the toast (A-13) |
-
-## 2. Entity relationships (current)
+`window.CHA_CATALOG =` followed by **strict JSON** and a final `;`. The Apps Script server parses the same file, so prices can't drift. `npm run check` validates it.
 
 ```mermaid
 erDiagram
-  PRODUCT ||--o{ CART_ITEM : "referenced by id"
-  PRODUCT ||--o{ ORDER_ITEM : "copied at order time"
-  ORDER ||--|{ ORDER_ITEM : contains
-  ORDER ||--|| CUSTOMER_DETAILS : embeds
-  PRODUCT { int id string name string category string grade string origin string weight number price }
-  CART_ITEM { int id int qty }
-  ORDER { string id string createdAt string payment number subtotal number delivery number total }
-  ORDER_ITEM { int id string name number price int qty }
-  CUSTOMER_DETAILS { string name string phone string email string address string city string notes }
+  CATALOG ||--o{ PRODUCT : products
+  CATALOG ||--|{ ZONE : "delivery.zones"
+  CATALOG ||--o{ REVIEW : reviews
+  PRODUCT ||--|{ VARIANT : variants
+  PRODUCT { int id string slug string name string category string grade string origin string description string tastingNotes string ingredients object brew object image string type }
+  VARIANT { string sku int weightG number_or_null price int_or_null stock }
+  ZONE { string id object label int fee int_or_null freeOver object estimate }
+  REVIEW { string name int rating string text string date int productId }
 ```
 
-## 3. Proposed structures
+| Field | Notes |
+|---|---|
+| `products[].slug` | Used in `#tea/<slug>` links. Unique |
+| `products[].type` | Omitted or `"tea"` for the main grid; `"bundle"` shows in Sampler boxes (none exist yet) |
+| `products[].image` | `card` (600×450 WebP), `large` (≤1000px WebP), `fallback` (original JPEG), `alt` |
+| `variants[].sku` | Unique, never renamed (carts and orders refer to it) |
+| `variants[].price` | Taka; `null` hides the size (Chamomile 100g and 250g are `null` until priced) |
+| `variants[].stock` | `null` not tracked; `0` sold out; `1…lowStockThreshold` "Only N left". Not reduced automatically |
+| `delivery.zones` | `inside_dhaka` ৳60, free from ৳1,500, 1–2 days; `outside_dhaka` ৳120, never free, 3–5 days |
+| `reviews` | **Genuine reviews only.** Empty today |
 
-### 3.1 Google Sheet order store (PROPOSED, P-01 / P-13)
+Current packs (prices, grades and origins are the owner's to confirm, PRD Q-6):
 
-Recommended for Phase 1 because it needs no server and the owner can manage orders in a spreadsheet. Sheet ID and owner account: **TBD** (PRD Q-1).
+| SKU | Product | Pack | Price ৳ | ৳/100g |
+|---|---|---|---|---|
+| CB-DARJ-100 | Darjeeling First Flush | 100g | 650 | 650 |
+| CB-ASSM-200 | Assam Breakfast Blend | 200g | 380 | 190 |
+| CB-MSLA-200 | Masala Chai | 200g | 420 | 210 |
+| CB-GRN-100 | Green Tea | 100g | 450 | 450 |
+| CB-JSMN-100 | Jasmine Green Tea | 100g | 520 | 520 |
+| CB-PREM-250 | Premium Estate Blend | 250g | 950 | 380 |
+| CB-CHAM-050 | Chamomile Calm | 50g | 480 | 960 |
+| CB-CHAM-100 / CB-CHAM-250 | Chamomile Calm | 100g / 250g | *not set (hidden)* | — |
+| CB-MIXD-200 | Everyday Mixed Tea | 200g | 350 | 175 |
 
-**Tab `Orders`**: one row per order.
+## 2. Google Sheet (IMPLEMENTED in `Code.gs`; created by `setup()`)
 
-| Column | Type | Example | Source |
+### `Orders`: one row per order
+
+| # | Column | Example | Source |
 |---|---|---|---|
-| A `order_id` | text | `CB-20261107-0042` | Generated **server-side** (format TBD) |
-| B `created_at` | datetime (Asia/Dhaka) | `2026-11-07 20:28` | Server clock |
-| C `status` | text | `new` | `new` → `confirmed` → `shipped` → `delivered` / `cancelled` (owner edits) |
-| D `name` | text | | Customer |
-| E `phone` | text | `01712345678` | Customer; validated server-side |
-| F `email` | text | | Optional |
-| G `address` | text | | |
-| H `city` | text | | |
-| I `zone` | text | `inside_dhaka` | P-03 |
-| J `payment` | text | `cash` / `bkash` / `nagad` | P-06 |
-| K `items` | text | `2×Assam Breakfast Blend (200g); 1×Masala Chai (200g)` | Human-readable summary |
-| L `items_json` | text | `[{"id":2,"qty":2},{"id":3,"qty":1}]` | Machine-readable |
-| M `subtotal` | number | `1180` | **Recalculated server-side** |
-| N `delivery` | number | `60` | Server-side, from the zone |
-| O `total` | number | `1240` | Server-side |
-| P `notes` | text | | Customer note |
-| Q `source` | text | `web` | For future channels |
-| R `user_agent` | text | | Optional, for debugging |
+| A | Order ID | `CB-261107-0042` | Server: Dhaka date + running number (`ORDER_SEQ` script property) |
+| B | Order date | `2026-11-07 20:28:41` | Server clock, Asia/Dhaka |
+| C | Status | `New` | Owner edits: Confirmed, Dispatched, Delivered, Cancelled |
+| D | Customer name | | Validated |
+| E | Phone | `01712345678` | Normalised |
+| F | Email | | Optional |
+| G | Delivery address | | |
+| H | Delivery area | `Inside Dhaka` | From catalogue zone |
+| I | Delivery estimate | `1–2 days` | From catalogue zone |
+| J | Products | `2 × Assam Breakfast Blend 200g @ ৳380 = ৳760` (one line per product) | Server-priced |
+| K | Total quantity | `3` | |
+| L | Subtotal (BDT) | `1180` | Server |
+| M | Discount (BDT) | `0` | Server, from Promos |
+| N | Promo code | | |
+| O | Delivery charge (BDT) | `60` | Server |
+| P | Total (BDT) | `1240` | Server |
+| Q | Payment method | `Cash on delivery` / `bKash (manual)` / `Nagad (manual)` | |
+| R | Customer note | | |
+| S | Language | `en` / `bn` | |
+| T | Request ID | | For de-duplication and debugging |
 
-**Tab `Products`** (PROPOSED, optional): a server-side price list the Apps Script reads to recalculate totals. Columns: `id`, `name`, `weight_g`, `price`, `active`, `stock` (stock for P-15). Until this exists, the price list is duplicated in Apps Script code. Keeping both lists in sync is a manual step; see PLAN.md.
+### `Order Items`: one row per product line
 
-**Tab `Messages`** (PROPOSED, P-13): `received_at`, `name`, `email`, `message`, `status`.
+Order ID · Order date · SKU · Product · Pack size (g) · Quantity · Unit price (BDT) · Line total (BDT)
 
-### 3.2 Changes to browser storage (PROPOSED)
+### `Messages`
 
-| Change | Feature | Reason |
+Received · Status · Name · Email or phone · Message · Language
+
+### `Promos` (owner-managed; empty by default)
+
+Code · Type (`percent` or `fixed`) · Value · Minimum subtotal · Maximum discount · Active (TRUE/FALSE) · Starts · Ends · Note
+
+Customer text beginning with `= + - @` is stored with a leading `'` so it can't run as a formula.
+
+### Script properties
+
+| Key | Purpose |
+|---|---|
+| `CATALOG_URL` | Live `catalog.js` address (required) |
+| `OWNER_EMAIL` | E-mail alerts (optional) |
+| `ORDER_SEQ` | Running order number (managed by the script) |
+
+## 3. Browser storage (IMPLEMENTED)
+
+| Key | Format | Personal data? |
 |---|---|---|
-| Stop writing full customer details to `tea-shop-orders` once P-01 works; keep only `{id, createdAt, total}` | P-01 | Privacy (see AUTH_SECURITY.md) |
-| New key `tea-shop-customer` holding name, phone, address and city, **only with an opt-in checkbox** | P-18 | Prefill the next checkout |
-| Add `weight_g` (number) to products | P-05 | Calculate price per 100g |
-| Add `variants: [{ weight_g, price }]` to products | P-05 | Multiple pack sizes; the cart key becomes `{ id, variant, qty }` |
-| Add `slug` to products | P-07 | Shareable `#tea/<slug>` links |
-| Add `stock` to products | P-15 | Stock badges |
+| `tea-shop-cart` | `[{ "sku": "CB-ASSM-200", "qty": 2 }]`. Old `{id, qty}` rows are migrated to the default pack size; unknown, unpriced or sold-out SKUs are ignored | No |
+| `tea-shop-area` | `"inside_dhaka"` | No |
+| `tea-shop-orders` | Last 10 **server-confirmed** orders: `[{ id, createdAt, total, items: [{ sku, qty }] }]`. Older entries containing customer details are stripped and marked `local` (never sent) | No |
+| `tea-shop-customer` | `{ name, phone, email, address, area }`, **only** when "Save my details on this device" is ticked; removed by "Forget my saved details" | **Yes (opt-in)** |
+| `cha-lang` | `"en"` or `"bn"` | No |
+| `cha-motion-paused` | `"1"` or `"0"` | No |
+| `cha-analytics-consent` | `"granted"` or `"denied"` (GA4 only) | No |
+| `sessionStorage["cha-setup-dismissed"]` | Development setup bar hidden | No |
 
-Any cart-format change **must** migrate existing carts or safely drop invalid rows (`readCart()` already drops unknown IDs).
+## 4. Retention and privacy
 
-### 3.3 Relational database (PROPOSED, Phase 4, needs approval)
+| Data | Retention |
+|---|---|
+| Sheet orders and messages | Owner policy (TBD); privacy policy says "as long as needed for delivery, returns and accounts" |
+| Browser data | Until the visitor clears it |
+| Apps Script cache (de-duplication, rate limits, catalogue) | Up to 6 hours |
 
-Only needed if the shop moves to its own server (see ARCHITECTURE.md §7). Draft schema; everything is **TBD**:
+## 5. Proposed
 
-```mermaid
-erDiagram
-  products ||--o{ product_variants : has
-  orders ||--|{ order_items : contains
-  product_variants ||--o{ order_items : "sold as"
-  orders }o--|| delivery_zones : "delivered to"
-  orders ||--o{ payments : "paid by"
-  products { int id PK text slug text name text category text grade text origin bool active }
-  product_variants { int id PK int product_id FK int weight_g int price_bdt int stock }
-  orders { text id PK timestamptz created_at text status text name text phone text email text address text city int zone_id FK int subtotal int delivery int total }
-  order_items { int id PK text order_id FK int variant_id FK int qty int unit_price }
-  delivery_zones { int id PK text code int fee_bdt text eta }
-  payments { int id PK text order_id FK text method text provider_ref int amount text status }
-```
-
-## 4. Data retention and privacy
-
-| Data | Where | Retention | Status |
-|---|---|---|---|
-| Cart | Customer browser | Until emptied or storage cleared | IMPLEMENTED |
-| Past orders with personal data | Customer browser | Indefinite ⚠ | IMPLEMENTED; to be reduced (§3.2) |
-| Orders | Google Sheet | TBD (owner policy) | PROPOSED |
-| Contact messages | Google Sheet | TBD | PROPOSED |
-
-A privacy policy describing this is part of P-04.
+| Change | Feature |
+|---|---|
+| Live stock in a Sheet `Products` tab, decremented on order | PROPOSED (P-15 follow-up) |
+| Bangla product descriptions (`description_bn` etc.) | PROPOSED |
+| Relational database, if the shop moves to its own server | PROPOSED, Phase 4 (needs approval) |

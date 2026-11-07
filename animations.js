@@ -1,5 +1,6 @@
 // Cha Bazaar — motion layer. Loaded after app.js.
-// Does nothing beyond basic feedback when the visitor prefers reduced motion.
+// Does nothing beyond the nav shadow when the visitor prefers reduced motion.
+// The shop works fully without this file.
 (() => {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const root = document.documentElement;
@@ -9,20 +10,6 @@
   const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 8);
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
-
-  // ---- "Added" feedback on the button (runs for everyone) ----
-  document.getElementById("product-grid").addEventListener("click", (e) => {
-    const btn = e.target.closest(".add-to-cart");
-    if (!btn) return;
-    clearTimeout(btn._addedTimer);
-    btn.classList.add("added");
-    btn.innerHTML = '<i class="bi bi-check-lg" aria-hidden="true"></i> Added';
-    btn._addedTimer = setTimeout(() => {
-      btn.classList.remove("added");
-      btn.textContent = "Add to cart";
-    }, 1200);
-    if (!reduced) flyToCart(btn);
-  });
 
   if (reduced) return;
   root.classList.add("motion");
@@ -138,7 +125,7 @@
   }, { threshold: 0.1 });
 
   const prepareCards = () => {
-    grid.querySelectorAll(":scope > .col-12").forEach((col) => {
+    grid.querySelectorAll(":scope > .col-12:not(.tea-col)").forEach((col) => {
       col.classList.add("tea-col", "card-wait");
       cardObserver.observe(col);
     });
@@ -152,39 +139,26 @@
   confirmModal.addEventListener("show.bs.modal", () => confirmContent.classList.add("show-stamp"));
   confirmModal.addEventListener("hidden.bs.modal", () => confirmContent.classList.remove("show-stamp"));
 
-  // ---- Fly the tea photo into the cart ----
-  function flyToCart(btn) {
-    const img = btn.closest(".tea")?.querySelector(".tea-img");
-    const target = document.querySelector(".cart-btn");
-    if (!img || !target) return;
-    const from = img.getBoundingClientRect();
-    const to = target.getBoundingClientRect();
-    const size = Math.min(from.width, 140);
+  // ---- Pause / play control for continuous motion (WCAG 2.2.2) ----
+  const PAUSE_KEY = "cha-motion-paused";
+  const pauseBtn = document.createElement("button");
+  pauseBtn.type = "button";
+  pauseBtn.className = "motion-toggle";
+  const setPaused = (paused) => {
+    root.classList.toggle("motion-paused", paused);
+    pauseBtn.setAttribute("aria-pressed", String(paused));
+    pauseBtn.innerHTML = `<i class="bi ${paused ? "bi-play-fill" : "bi-pause-fill"}" aria-hidden="true"></i><span>${t(paused ? "motion.play" : "motion.pause")}</span>`;
+    try { localStorage.setItem(PAUSE_KEY, paused ? "1" : "0"); } catch { /* ignore */ }
+  };
+  let startPaused = false;
+  try { startPaused = localStorage.getItem(PAUSE_KEY) === "1"; } catch { /* ignore */ }
+  pauseBtn.addEventListener("click", () => setPaused(!root.classList.contains("motion-paused")));
+  hero.appendChild(pauseBtn);
+  setPaused(startPaused);
 
-    const clone = img.cloneNode();
-    clone.className = "fly-img";
-    clone.removeAttribute("loading");
-    Object.assign(clone.style, {
-      left: `${from.left + from.width / 2 - size / 2}px`,
-      top: `${from.top + from.height / 2 - size / 2}px`,
-      width: `${size}px`,
-      height: `${size}px`
-    });
-    document.body.appendChild(clone);
-
-    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
-    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
-    clone.animate([
-      { transform: "translate(0, 0) scale(1)", opacity: 1, borderRadius: "6px" },
-      { transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 80}px) scale(.6)`, opacity: 1, offset: 0.55 },
-      { transform: `translate(${dx}px, ${dy}px) scale(.15)`, opacity: .4, borderRadius: "50%" }
-    ], { duration: 750, easing: "cubic-bezier(.5, 0, .3, 1)" }).finished
-      .then(() => {
-        clone.remove();
-        target.animate(
-          [{ transform: "scale(1)" }, { transform: "scale(1.12)" }, { transform: "scale(1)" }],
-          { duration: 300, easing: "ease-out" }
-        );
-      });
-  }
+  // ---- Language switch: the headline is re-written as plain text ----
+  document.addEventListener("cha:lang", () => {
+    title.removeAttribute("aria-label");
+    setPaused(root.classList.contains("motion-paused"));
+  });
 })();

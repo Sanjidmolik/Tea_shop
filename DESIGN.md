@@ -26,8 +26,8 @@
 | `--garden` | `#173F2E` | Deep tea-leaf green: nav, hero, footer, primary buttons, headings |
 | `--garden-2` | `#20543D` | Hover and pressed green |
 | `--bud` | `#9BBF4A` | New-bud green: cart count, progress bar, small highlights on green |
-| `--liquor` | `#C27A14` | Brewed-tea amber: main buy actions, grade codes, icons |
-| `--liquor-2` | `#A86509` | Amber hover |
+| `--liquor` | `#9A5B00` | Brewed-tea amber: main buy actions, grade codes, icons (v2: darkened for contrast) |
+| `--liquor-2` | `#7F4B00` | Amber hover |
 | `--paper` | `#F1F4EC` | Pale leaf-tint page background |
 | `--ink` | `#1A2119` | Body text |
 | `--ink-soft` | `#4E5A4C` | Secondary text |
@@ -43,10 +43,11 @@
 | White on `--garden` (buttons) | 11.75:1 | Pass | IMPLEMENTED |
 | `--ink-soft` on white | 7.26:1 | Pass | IMPLEMENTED |
 | `--garden` on `--bud` (cart count) | 5.57:1 | Pass | IMPLEMENTED |
-| White on `--liquor` (Checkout, Browse, Place order) | **3.45:1** | **Fail** | Fix in **P-08** |
-| `--liquor` text on white (grade codes) | **3.45:1** | **Fail** | Fix in **P-08** |
+| White on `--liquor` (Checkout, Browse, Place order) | 5.43:1 | Pass | IMPLEMENTED (v2) |
+| `--liquor` text on white (grade codes) | 5.43:1 | Pass | IMPLEMENTED (v2) |
+| `--liquor` text on `--paper` | 4.88:1 | Pass | IMPLEMENTED (v2) |
 
-**PROPOSED (P-08):** change `--liquor` to about `#9A5B00` and `--liquor-2` to about `#7F4B00`, then re-measure. The colour should still read as tea amber.
+**Done in v2 (P-08).** The colour still reads as tea amber.
 
 Dark mode: **not implemented**. Not planned (TBD).
 
@@ -131,7 +132,9 @@ Line length: the hero lead is capped at 34ch and About paragraphs at 58ch, keepi
 | Toast | `.app-toast` | Green, bottom-right, 2s |
 | Footer | `.site-footer` | Wordmark and copyright |
 
-**PROPOSED components:** WhatsApp floating button (P-02), delivery-zone selector (P-03), testimonial block and guarantee badge (P-04), unit-price line and pack-size selector (P-05), bKash/Nagad payment chips (P-06), quick-view panel (P-07), motion pause button (P-09), stock badge (P-15).
+**v2 components (IMPLEMENTED):** language toggle, setup notice (localhost only), card pack-size select and unit price, stock badges, quick-view modal with size chips, trust band with stencil "Fresh or replaced" stamp, review cards with stars and sample flags, delivery-area and payment choice cards, payment instructions panel, promo field, form alert, recent orders, floating WhatsApp button, motion pause button, footer grid, consent bar, policy page layout. Bangla mode swaps the stencil display face for Hind Siliguri (the stencil font has no Bangla glyphs).
+
+**Originally PROPOSED components:** WhatsApp floating button (P-02), delivery-zone selector (P-03), testimonial block and guarantee badge (P-04), unit-price line and pack-size selector (P-05), bKash/Nagad payment chips (P-06), quick-view panel (P-07), motion pause button (P-09), stock badge (P-15).
 
 ## 6. UI states
 
@@ -141,12 +144,12 @@ Line length: the hero lead is capped at 34ch and About paragraphs at 58ch, keepi
 | Empty cart | Cart panel | Bag icon, "Your cart is empty.", **Browse the teas**; Checkout and Empty cart disabled | IMPLEMENTED |
 | Free-delivery progress | Cart panel | "Add ৳X more for free delivery." or "Your order ships free.", plus a bar | IMPLEMENTED |
 | Form validation | Checkout, Contact | Bootstrap `.was-validated`; specific messages (e.g. "Enter an 11-digit number starting with 01."); focus moves to the first invalid field | IMPLEMENTED |
-| Added to cart | Card button, cart button, toast | Button shows "✓ Added" for 1.2s; photo flies to the cart; toast | IMPLEMENTED (P-11 proposes removing the toast) |
+| Added to cart | Card button, cart count | Button shows "✓ Added" for 1.2s, count updates, screen-reader announcement (v2: toast and flying photo removed) | IMPLEMENTED |
 | Order placed | Confirmation modal | Order ID, call-back message, amount due and payment method | IMPLEMENTED |
 | Broken image | Any `<img>` | Swapped once for `Tea/MIX_tea.jpg` | IMPLEMENTED |
-| Loading / sending | Checkout submit | — | PROPOSED (needed once P-01 adds a network call) |
-| Send failed | Checkout, Contact | — | PROPOSED: error text plus WhatsApp fallback (P-01, P-13) |
-| Out of stock | Card | — | PROPOSED (P-15) |
+| Loading / sending | Checkout submit | Spinner + "Placing order…", button and close buttons disabled | IMPLEMENTED (v2) |
+| Send failed | Checkout, Contact | Red alert explaining what happened, cart kept, WhatsApp / call buttons | IMPLEMENTED (v2) |
+| Out of stock / low stock | Card, quick view | "Sold out" (button disabled) / "Only N left", from real `stock` only | IMPLEMENTED (v2) |
 
 ## 7. Motion (IMPLEMENTED in `animations.css` and `animations.js`)
 
@@ -158,7 +161,7 @@ Line length: the hero lead is capped at 34ch and About paragraphs at 58ch, keepi
 | Ticker | Promise strip scrolls in a 32s loop; pauses on hover or focus | Continuous ⚠ A-09 |
 | Section titles | Left-to-right clip-path wipe | Scroll into view |
 | Cards | Staggered rise (70ms apart) | Scroll into view or a filter change |
-| Add to cart | Photo flies to the cart; cart button scales; count pops | Click |
+| Add to cart | *(v2: removed; replaced by the "Added" button state)* | — |
 | Cart rows | Slide in from the right | Render |
 | Confirmation | Order label stamps on; title fades up | Modal opens |
 
@@ -174,9 +177,9 @@ Line length: the hero lead is capped at 34ch and About paragraphs at 58ch, keepi
 | `aria-live` on the product grid and toast; `aria-pressed` on tabs | IMPLEMENTED |
 | `aria-label` on icon buttons (remove, quantity, cart) | IMPLEMENTED |
 | Reduced motion respected | IMPLEMENTED |
-| Text contrast ≥ 4.5:1 everywhere | **Not met.** PROPOSED in P-08 |
-| Pause, stop or hide for moving content | **Not met.** PROPOSED in P-09 |
-| Image `width`/`height` to prevent layout shift | PROPOSED in P-10 |
+| Text contrast ≥ 4.5:1 everywhere | IMPLEMENTED (v2) |
+| Pause, stop or hide for moving content | IMPLEMENTED (v2): pause button in the hero, remembered |
+| Image `width`/`height` to prevent layout shift | IMPLEMENTED (v2) |
 | Screen-reader testing (NVDA, VoiceOver) | TBD (see TESTING.md) |
 
 ## 9. Content and voice

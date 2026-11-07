@@ -1,208 +1,160 @@
 # ARCHITECTURE — Cha Bazaar
 
 > Status legend: **IMPLEMENTED** · **PROPOSED** · **TBD** (see [PRD.md](PRD.md)).
-> Related: [DATABASE.md](DATABASE.md) · [API.md](API.md) · [INTEGRATIONS.md](INTEGRATIONS.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md)
+> Related: [DATABASE.md](DATABASE.md) · [API.md](API.md) · [INTEGRATIONS.md](INTEGRATIONS.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md) · [apps-script/README.md](apps-script/README.md)
 
-## 1. Technology stack (IMPLEMENTED, verified)
+## 1. Technology stack (IMPLEMENTED)
 
-| Layer | Technology | Version | Loaded from |
-|---|---|---|---|
-| Markup | HTML5, single page | — | `index.html` |
-| Styling | CSS3 with custom properties | — | `styles.css`, `animations.css` |
-| UI framework | Bootstrap (CSS and JS bundle with Popper) | 5.3.3 | `cdn.jsdelivr.net` |
-| Icons | Bootstrap Icons (web font) | 1.11.3 | `cdn.jsdelivr.net` |
-| Fonts | Big Shoulders Stencil, Hind Siliguri | Google Fonts | `fonts.googleapis.com` |
-| Logic | Vanilla JavaScript (ES2020: `?.`, `??`; classic scripts, not modules) | — | `app.js`, `animations.js` |
-| Persistence | Browser `localStorage` | — | See DATABASE.md |
-| Browser APIs used | `localStorage`, `storage` event, `IntersectionObserver`, `MutationObserver`, Web Animations API, `matchMedia`, Constraint Validation API | — | — |
+| Layer | Technology | Notes |
+|---|---|---|
+| Pages | Static HTML: `index.html` + 4 policy pages | No build step, no framework |
+| Styling | CSS custom properties (`styles.css`, `animations.css`) + Bootstrap 5.3.3 | Bootstrap and Icons 1.11.3 from jsDelivr with **SRI hashes** |
+| Fonts | Big Shoulders Stencil, Hind Siliguri (Google Fonts) | Hind Siliguri renders Bangla |
+| Front-end logic | Vanilla JavaScript (ES2020, classic scripts) | `config.js`, `catalog.js`, `i18n.js`, `shared.js`, `analytics.js`, `app.js`, `animations.js` |
+| Order server | **Google Apps Script** web app (V8), bound to a Google Sheet | `apps-script/Code.gs`, `appsscript.json` |
+| Data | `catalog.js`, Google Sheet, browser `localStorage` | See DATABASE.md |
+| Hosting | Any static host; GitHub Pages expected (`https://sanjidmolik.github.io/Tea_shop/`) | Pages status TBD |
+| Dev tooling | Node + Playwright (tests, social image), Python + Pillow (images) | `package.json` has **dev dependencies only** |
 
-**Not present:** `package.json`, Node dependencies, bundler or build step, framework (React/Vue), back end, database server, authentication, payment gateway, environment variables, automated tests, CI.
+**Not present:** a bundler, a framework, runtime npm packages, a payment gateway, customer accounts, a server you have to run yourself.
 
-Hosting: static files. Whether GitHub Pages is enabled for `sanjidmolik/tea_shop` is **TBD** (PRD Q-9).
-
-## 2. Folder structure (IMPLEMENTED)
+## 2. Folder structure
 
 ```
 Tea_shop/
-├── index.html          # The whole page: nav, hero, shop, about, contact, cart, checkout, confirmation, toast
-├── styles.css          # Design tokens (:root) and all component styles
-├── animations.css      # Motion styles, only under prefers-reduced-motion: no-preference
-├── app.js              # Catalogue data, cart, filters, checkout, contact form (core logic)
-├── animations.js       # Motion layer; loaded after app.js; optional
-├── Tea/                # Product images (7 JPEGs, ~776 KB total)
-│   ├── Assam_Tea.jpg
-│   ├── Green-Tea-Leaves-2.jpg
-│   ├── Loose_Jasmine_Tea_Leaves.jpg
-│   ├── MIX_tea.jpg
-│   ├── Masala_tea.jpg
-│   ├── calming-herbal-tea-blend-chamomile-600nw-2568834187.jpg
-│   └── darjeeling.jpg
-└── *.md                # Project documentation (this set of 15 files)
+├── index.html                 shop (nav, hero, teas, samplers, trust/reviews, about, contact,
+│                              cart, quick view, checkout, confirmation, WhatsApp button)
+├── delivery.html returns.html privacy.html terms.html   policy pages, English + Bangla
+├── config.js                  business settings: endpoint, phone, WhatsApp, Facebook, bKash/Nagad, analytics
+├── catalog.js                 products, variants, stock, delivery zones, reviews (strict JSON)
+├── i18n.js                    English/Bangla strings, t(), applyI18n()
+├── shared.js                  shared helpers (contact links, delivery fee, language, setup notice)
+├── analytics.js               optional Plausible / GA4 (consent) → chaTrack()
+├── app.js                     shop logic
+├── animations.js / .css       optional motion layer (+ pause control)
+├── styles.css                 design tokens + components
+├── apps-script/
+│   ├── Code.gs                order server
+│   ├── appsscript.json        manifest: Dhaka time zone, minimal scopes, web-app settings
+│   └── README.md              deployment guide
+├── tests/
+│   ├── check.js               static checks
+│   ├── server.test.js         25 tests of Code.gs
+│   ├── e2e.test.js            browser tests (Playwright)
+│   ├── gas-mock.js            runs Code.gs on simulated Google services
+│   └── mock-server.js         local site + /exec for development and tests
+├── tools/
+│   ├── optimize-images.py     JPEG → WebP (card + large)
+│   ├── og-image.html          social image template
+│   └── render-og-image.js     renders og-image.jpg
+├── Tea/                       original photos (fallbacks); Tea/webp/ optimised copies
+├── og-image.jpg  robots.txt  sitemap.xml  package.json
+└── *.md                       documentation
 ```
 
-**Important:** file names are case-sensitive on GitHub Pages and Linux. The first build had a broken `Assam_tea.jpg` reference for exactly this reason.
-
-## 3. Application architecture
+## 3. Components
 
 ```mermaid
 flowchart TB
   subgraph Browser
-    HTML[index.html<br/>static markup + IDs]
-    CSS[styles.css + animations.css]
-    subgraph app.js
-      DATA[products array<br/>config constants]
-      CART[Cart module<br/>readCart / writeCart / setQty]
-      RENDER[Renderers<br/>renderProducts / renderCart / renderCheckoutSummary]
-      FILTER[applyFilters<br/>search + sort + category]
-      CHECKOUT[Checkout handler<br/>validate → build order → save]
-    end
-    ANIM[animations.js<br/>observes DOM, adds motion]
-    LS[(localStorage<br/>tea-shop-cart<br/>tea-shop-orders)]
+    CFG[config.js] --> SH
+    CAT[catalog.js] --> SH
+    I18N[i18n.js] --> SH[shared.js]
+    SH --> APP[app.js]
+    AN[analytics.js] --> APP
+    APP --> ANIM[animations.js]
+    LS[(localStorage)]
+    APP <--> LS
   end
-  CDN[jsDelivr CDN<br/>Bootstrap 5.3.3 + Icons]
-  GF[Google Fonts]
-  UNS[Unsplash<br/>1 hotlinked image]
-
-  HTML --> app.js
-  HTML --> ANIM
-  CDN --> HTML
-  GF --> HTML
-  UNS -.image.-> RENDER
-  DATA --> FILTER --> RENDER
-  CART <--> LS
-  CHECKOUT --> LS
-  CART --> RENDER
-  ANIM -.MutationObserver.-> RENDER
+  subgraph Google
+    GAS[Apps Script web app<br/>Code.gs]
+    SHEET[(Google Sheet<br/>Orders, Order Items,<br/>Messages, Promos)]
+    MAIL[Gmail alert]
+    GAS --> SHEET
+    GAS --> MAIL
+  end
+  APP -- "POST order / contact / checkPromo" --> GAS
+  GAS -- "GET catalog.js (cached 10 min)" --> HOST[Your website host]
+  APP -. "wa.me / tel: links" .-> WA[WhatsApp / phone]
+  CDN[jsDelivr: Bootstrap + Icons, SRI] --> Browser
+  GF[Google Fonts] --> Browser
 ```
 
-### Script load order (matters)
+**Script order** (all classic scripts at the end of `<body>`): Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `animations.js`. Policy pages load only `config.js`, `catalog.js`, `i18n.js` and `shared.js`.
 
-1. `bootstrap.bundle.min.js`: `app.js` calls `bootstrap.Toast`, `bootstrap.Offcanvas` and `bootstrap.Modal` at load time, so Bootstrap must load first.
-2. `app.js`: renders the catalogue and cart immediately.
-3. `animations.js`: wraps an IIFE around the already-rendered DOM. It is safe to remove; the shop works without it.
+### Design decisions
 
-### Key design decisions (IMPLEMENTED)
-
-| Decision | Reason |
+| Decision | Why |
 |---|---|
-| The cart stores only `{id, qty}` | Price and name changes in `products` apply automatically; stale IDs are dropped |
-| All HTML from data goes through `escapeHtml()` | Prevents XSS if product data ever comes from outside the code |
-| Event delegation on `#product-grid` and `#cart-items` | The grid is re-rendered on every filter change |
-| Animation lives in separate files | It can be switched off by deleting two lines; core logic stays simple |
-| No build step | Anyone can edit and deploy by uploading files |
+| One catalogue file read by both the browser and the server | Prices, stock and delivery fees can't drift; the server never trusts browser totals |
+| Strict-JSON `catalog.js` instead of a `.json` fetch | Works when opening `index.html` as a file, needs no extra request, and the server can still parse it |
+| Apps Script + Sheets | Free, no hosting, the owner already knows spreadsheets, Google handles HTTPS and login |
+| `text/plain` POST | Avoids a CORS preflight that Apps Script can't answer |
+| `clientRequestId` per checkout attempt | Repeat clicks and retries after a timeout can't create duplicate orders |
+| Settings and catalogue separate from UI code | The owner edits business data without touching logic |
+| Unset settings hide their UI | No `YOUR_…` placeholders are ever shown to customers |
+| Motion in its own files | The shop works fully without it |
+| English text stays in the HTML; Bangla in `i18n.js` | Search engines and no-JS visitors get complete English pages |
 
-## 4. Data flow
-
-### 4.1 Add to cart (IMPLEMENTED)
-
-```mermaid
-sequenceDiagram
-  actor U as Shopper
-  participant G as #product-grid
-  participant A as app.js
-  participant LS as localStorage
-  participant M as animations.js
-  U->>G: click "Add to cart"
-  G->>A: delegated click → addToCart(id)
-  A->>LS: readCart() / writeCart([{id,qty}])
-  A->>A: renderCart() → badge, totals, delivery bar
-  A->>U: toast "Added to cart: …"
-  G->>M: same click → "Added" label + flyToCart()
-```
-
-### 4.2 Checkout (IMPLEMENTED: local only)
+## 4. Data flow: placing an order (IMPLEMENTED)
 
 ```mermaid
 sequenceDiagram
-  actor U as Shopper
-  participant C as Cart panel
-  participant F as #checkoutForm
+  actor U as Customer
   participant A as app.js
-  participant LS as localStorage
-  U->>C: Checkout
-  C->>F: renderCheckoutSummary(), open modal
-  U->>F: fill details, Place order
-  F->>A: submit → checkValidity()
-  alt invalid
-    A->>F: .was-validated, focus first invalid field
-  else valid
-    A->>A: build order {id, customer, items, totals}
-    A->>LS: append to tea-shop-orders
-    A->>LS: clearCart()
-    A->>U: confirmation modal with order ID
-  end
-  Note over A,LS: ⚠ The order never leaves the browser (A-01)
-```
-
-### 4.3 Checkout (PROPOSED, P-01)
-
-```mermaid
-sequenceDiagram
-  actor U as Shopper
-  participant A as app.js
-  participant GAS as Google Apps Script web app (PROPOSED)
-  participant S as Google Sheet "Orders" (PROPOSED)
+  participant G as Apps Script (Code.gs)
+  participant C as catalog.js (live site)
+  participant S as Google Sheet
+  U->>A: Checkout (cart panel)
+  A->>A: new clientRequestId, prefill (if saved), render areas and payments
   U->>A: Place order
-  A->>A: validate, disable button, show "Placing order…"
-  A->>GAS: POST {action:"order", items:[{id,qty}], customer, zone}
-  GAS->>GAS: validate, recompute prices and totals, generate order ID
-  GAS->>S: append row
-  GAS-->>A: {ok:true, orderId, total}
-  A->>U: confirmation
-  alt network or server error
-    A->>U: error + "Send order on WhatsApp" with pre-filled text
+  A->>A: validate fields and area
+  alt ORDER_ENDPOINT not set
+    A-->>U: "Online ordering isn't switched on yet" + WhatsApp / call
+  else
+    A->>A: disable button, "Placing order…"
+    A->>G: POST {action:"order", items:[{sku,qty}], customer, area, payment, promoCode, expectedTotal}
+    G->>G: honeypot, de-duplicate, validate, rate-limit
+    G->>C: fetch prices (if not cached)
+    G->>G: re-price, delivery, promo, stock, compare expectedTotal
+    G->>S: lock → next order ID → append Orders + Order Items
+    G-->>A: {ok:true, orderId, total}
+    A->>A: save history (no personal data), clear cart
+    A-->>U: confirmation with order ID, payment steps, WhatsApp link
   end
+  Note over A,G: Network error or ok:false → error message, cart kept, WhatsApp/phone fallback.<br/>Retry reuses the same clientRequestId.
 ```
 
-Endpoint contract: [API.md](API.md). Sheet layout: [DATABASE.md](DATABASE.md).
+## 5. Configuration
 
-## 5. Configuration and environment variables
-
-**IMPLEMENTED:** there are no environment variables (no build step to inject them). Configuration is a set of constants at the top of `app.js`:
-
-| Constant | Value | Purpose |
+| File | Key | Purpose |
 |---|---|---|
-| `CURRENCY` | `"৳"` | Price prefix |
-| `DELIVERY_FEE` | `60` | Flat delivery fee in taka |
-| `FREE_DELIVERY_THRESHOLD` | `1500` | Free delivery from this subtotal |
-| `FALLBACK_IMAGE` | `"Tea/MIX_tea.jpg"` | Replaces broken images |
-| `CART_KEY` | `"tea-shop-cart"` | `localStorage` key |
-| `ORDERS_KEY` | `"tea-shop-orders"` | `localStorage` key |
+| `config.js` | `SITE_URL` | Share links, structured data |
+| | `ORDER_ENDPOINT` | Apps Script `/exec` URL |
+| | `BUSINESS_PHONE`, `WHATSAPP_NUMBER`, `FACEBOOK_URL`, `BUSINESS_EMAIL`, `BUSINESS_ADDRESS`, `OPENING_HOURS` | Contact |
+| | `BKASH_NUMBER`, `BKASH_ACCOUNT_TYPE`, `NAGAD_NUMBER`, `NAGAD_ACCOUNT_TYPE` | Manual payment steps |
+| | `RETURN_WINDOW_DAYS` | Policy text |
+| | `ANALYTICS` | `provider`, `plausibleDomain`, `ga4MeasurementId` |
+| | `SHOW_SAMPLE_REVIEWS_IN_DEV` | Labelled sample reviews on localhost only |
+| `catalog.js` | `delivery.zones`, `lowStockThreshold`, products | Business data |
+| Script properties | `CATALOG_URL`, `OWNER_EMAIL` | Server settings |
+| `app.js` constants | `MAX_QTY` (50), `REQUEST_TIMEOUT_MS` (20000), storage keys | Technical |
 
-**PROPOSED** additions (still public constants, not secrets):
+There are **no environment variables** and no secrets in the website. Values starting with `YOUR_` count as unset.
 
-| Name | Example | For |
-|---|---|---|
-| `ORDER_ENDPOINT` | `https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec` (TBD) | P-01, P-13 |
-| `WHATSAPP_NUMBER` | `8801XXXXXXXXX` (TBD) | P-02 |
-| `DELIVERY_ZONES` | `{ inside_dhaka: { fee: TBD }, outside_dhaka: { fee: TBD } }` | P-03 |
+## 6. Limitations
 
-⚠ Anything in front-end code is public. Secrets (Apps Script owner credentials, bKash/Nagad API keys) must **never** be placed in these files. See [AUTH_SECURITY.md](AUTH_SECURITY.md).
+1. Stock is a number in `catalog.js`; it is not reduced automatically when orders arrive.
+2. Price changes reach the server within about 10 minutes of publishing (catalogue cache). Orders in that window get `total_changed` and must be re-submitted. This is safe, but the customer sees a message.
+3. Apps Script quotas apply (daily e-mails, executions). They're fine for a small shop; check Google's quota page before big campaigns.
+4. Product descriptions, tasting notes and ingredients are English only.
+5. One product image (Premium Estate Blend) is hotlinked from Unsplash.
+6. No Content-Security-Policy yet (GitHub Pages can't set headers; a `<meta>` CSP is proposed).
+7. Hash links (`#tea/…`) aren't separate pages for search engines; products are described with JSON-LD on the home page.
 
-## 6. Limitations (current)
+## 7. Future (PROPOSED)
 
-1. No server, so orders and contact messages aren't delivered (A-01, A-13).
-2. Product data is hard-coded; editing prices needs a code change and redeploy.
-3. Prices and totals are calculated in the browser. That's fine while nothing is charged, but a server must recalculate them once orders are sent (FR-22).
-4. The site depends on three third-party hosts (jsDelivr, Google Fonts, Unsplash). If jsDelivr is blocked, `bootstrap` is undefined and `app.js` stops at the toast setup (see DEBUGGING.md).
-5. No Subresource Integrity (SRI) hashes on CDN files (see AUTH_SECURITY.md, P-24).
-6. Personal data from past orders stays in the customer's browser storage indefinitely.
-
-## 7. Target architecture (PROPOSED, phased)
-
-```mermaid
-flowchart LR
-  subgraph Phase1[Phase 1: launch, no own server]
-    SITE[Static site<br/>GitHub Pages] -->|POST JSON| GAS[Apps Script web app]
-    GAS --> SHEET[(Google Sheet)]
-    GAS -->|email alert| OWNER[Owner Gmail]
-    SITE -->|wa.me link| WA[WhatsApp]
-  end
-  subgraph Phase4[Phase 4: optional, needs approval]
-    SITE2[Static or SSR site] --> API[Own API server]
-    API --> DB[(Relational DB)]
-    API --> PAY[bKash / Nagad gateway]
-  end
-```
-
-Changing to Phase 4 changes the stack and **requires explicit owner approval** (see [AGENTS.md](AGENTS.md)).
+| Step | Needs |
+|---|---|
+| Live stock in the Sheet, decremented per order | Small change to `Code.gs` and a read endpoint |
+| Online bKash/Nagad payment | Own server, merchant accounts, owner approval (P-22) |
