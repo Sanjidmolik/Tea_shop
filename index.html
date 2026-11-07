@@ -3,32 +3,38 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Cha Bazaar — hand-picked teas from the finest gardens, delivered to your door." />
-    <title>Cha Bazaar • Fine Teas Online</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍵</text></svg>" />
+    <meta name="description" content="Cha Bazaar — estate teas from Sylhet, Assam and Darjeeling, packed fresh every week and delivered across Bangladesh." />
+    <meta name="theme-color" content="#173F2E" />
+    <title>Cha Bazaar • Estate Teas, Packed Fresh</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23173F2E'/><text x='50' y='72' font-size='64' text-anchor='middle' fill='%23F1F4EC'>চা</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="styles.css" rel="stylesheet" />
   </head>
   <body>
+    <a class="skip-link" href="#products">Skip to the teas</a>
+
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary sticky-top shadow-sm">
+    <nav class="navbar navbar-expand-md navbar-dark site-nav sticky-top">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="#top">🍵 Cha Bazaar ☕</a>
-        <div class="d-flex align-items-center gap-2 order-lg-last">
-          <button class="btn btn-outline-secondary position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas" aria-label="Open cart">
-            <i class="bi bi-cart3"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">0</span>
+        <a class="navbar-brand wordmark" href="#top">Cha Bazaar</a>
+        <div class="d-flex align-items-center gap-2 order-md-last">
+          <button class="cart-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas" aria-controls="cartOffcanvas" aria-label="Open cart">
+            <i class="bi bi-bag" aria-hidden="true"></i>
+            <span>Cart</span>
+            <span class="cart-count" id="cart-count">0</span>
           </button>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
         </div>
         <div class="collapse navbar-collapse" id="navContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="#top">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#products">Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <ul class="navbar-nav ms-md-4 me-auto">
+            <li class="nav-item"><a class="nav-link" href="#products">Teas</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about">Our sourcing</a></li>
             <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
           </ul>
         </div>
@@ -36,36 +42,69 @@
     </nav>
 
     <!-- Hero -->
-    <header class="hero py-5 border-bottom" id="top">
-      <div class="container text-center py-lg-4">
-        <h1 class="display-5 fw-semibold">Discover Your Perfect Cup</h1>
-        <p class="lead text-muted mb-4">Hand-picked teas from the finest gardens of Sylhet, Assam and Darjeeling — delivered fresh to your door.</p>
-        <a href="#products" class="btn btn-success btn-lg">Shop Teas</a>
-        <div class="row g-3 justify-content-center mt-4 small text-muted">
-          <div class="col-auto"><i class="bi bi-truck me-1"></i> Free delivery over <span id="free-delivery-amount"></span></div>
-          <div class="col-auto"><i class="bi bi-cash-coin me-1"></i> Cash on delivery</div>
-          <div class="col-auto"><i class="bi bi-flower1 me-1"></i> Fresh-packed every week</div>
+    <header class="hero" id="top">
+      <div class="container">
+        <div class="row align-items-center g-4 g-lg-5">
+          <div class="col-lg-6">
+            <h1 class="hero-title">Garden tea, packed fresh every week</h1>
+            <p class="hero-lead">We buy straight from estates in Sylhet, Assam and Darjeeling, pack your order by hand, and deliver it to your door. Pay when it arrives.</p>
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <a href="#products" class="btn btn-liquor btn-lg">Browse the teas</a>
+              <a href="#about" class="hero-link">How we source</a>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <figure class="chest" aria-label="Illustration of a tea chest stencilled with Cha Bazaar markings">
+              <div class="chest-face">
+                <span class="stamp stamp-mark" aria-hidden="true">চা</span>
+                <span class="stamp stamp-name">Cha Bazaar</span>
+                <span class="stamp stamp-origin">Sylhet, Bangladesh</span>
+                <span class="stamp stamp-produce">Garden fresh. Keep dry.</span>
+                <dl class="stamp stamp-specs">
+                  <div><dt>Grade</dt><dd>BOP</dd></div>
+                  <div><dt>Nett</dt><dd>40 kg</dd></div>
+                  <div><dt>Chest</dt><dd>0428</dd></div>
+                </dl>
+              </div>
+            </figure>
+          </div>
         </div>
       </div>
     </header>
 
+    <!-- Promise strip -->
+    <section class="promises" aria-label="Delivery and payment">
+      <div class="container">
+        <ul class="promise-list">
+          <li><i class="bi bi-truck" aria-hidden="true"></i> Free delivery on orders over <span id="free-delivery-amount"></span></li>
+          <li><i class="bi bi-cash-coin" aria-hidden="true"></i> Cash or mobile banking on delivery</li>
+          <li><i class="bi bi-box-seam" aria-hidden="true"></i> Packed within 7 days of your order</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- Products -->
-    <main class="container my-5" id="products">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-        <h2 class="m-0">Teas</h2>
-        <div class="d-flex gap-2">
-          <input type="search" class="form-control" placeholder="Search teas..." id="searchInput" aria-label="Search teas" />
-          <select class="form-select" id="sortSelect" aria-label="Sort">
-            <option value="featured">Sort: Featured</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="name-asc">Name: A–Z</option>
-            <option value="name-desc">Name: Z–A</option>
+    <main class="container shop" id="products">
+      <div class="shop-head">
+        <h2 class="section-title">The teas</h2>
+        <div class="shop-tools">
+          <label class="visually-hidden" for="searchInput">Search teas</label>
+          <div class="search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" class="form-control" placeholder="Search teas" id="searchInput" />
+          </div>
+          <label class="visually-hidden" for="sortSelect">Sort teas</label>
+          <select class="form-select" id="sortSelect">
+            <option value="featured">Our picks first</option>
+            <option value="price-asc">Price, low to high</option>
+            <option value="price-desc">Price, high to low</option>
+            <option value="name-asc">Name, A to Z</option>
+            <option value="name-desc">Name, Z to A</option>
           </select>
         </div>
       </div>
 
-      <div class="d-flex flex-wrap gap-2 mb-4" id="category-filters" role="group" aria-label="Filter by category">
+      <div class="category-tabs" id="category-filters" role="group" aria-label="Filter by type of tea">
         <!-- JS renders category buttons -->
       </div>
 
@@ -75,57 +114,67 @@
     </main>
 
     <!-- About -->
-    <section class="bg-light py-5 border-top" id="about">
+    <section class="about" id="about">
       <div class="container">
-        <div class="row align-items-center g-4">
-          <div class="col-lg-6">
-            <h2>About Cha Bazaar</h2>
-            <p class="text-muted">We started Cha Bazaar to bring garden-fresh tea to every home. We buy straight from estates and pack every order fresh, so you get the full aroma in your cup.</p>
-            <ul class="list-unstyled text-muted">
-              <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Sourced directly from tea estates</li>
-              <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>No artificial flavours or colours</li>
-              <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Packed in airtight, resealable pouches</li>
-            </ul>
+        <div class="row align-items-center g-4 g-lg-5">
+          <div class="col-lg-6 order-lg-2">
+            <h2 class="section-title">From the estate to your kettle</h2>
+            <p>Most tea sits in a warehouse for months before it reaches a shop. We buy small lots directly from gardens, keep them in sealed chests, and only pack what has been ordered that week.</p>
+            <dl class="sourcing">
+              <div>
+                <dt>Sourced direct</dt>
+                <dd>We buy from estates we have visited, not from resellers.</dd>
+              </div>
+              <div>
+                <dt>Nothing added</dt>
+                <dd>No artificial flavours or colours. Spices in our chai are whole and ground in-house.</dd>
+              </div>
+              <div>
+                <dt>Sealed to keep</dt>
+                <dd>Every order ships in a resealable, airtight pouch.</dd>
+              </div>
+            </dl>
           </div>
-          <div class="col-lg-6">
-            <img src="Tea/Loose_Jasmine_Tea_Leaves.jpg" alt="Loose tea leaves" class="img-fluid rounded shadow-sm about-img" loading="lazy" />
+          <div class="col-lg-6 order-lg-1">
+            <img src="Tea/Loose_Jasmine_Tea_Leaves.jpg" alt="Loose tea leaves" class="about-img" loading="lazy" />
           </div>
         </div>
       </div>
     </section>
 
     <!-- Contact -->
-    <section class="py-5 border-top" id="contact">
+    <section class="contact" id="contact">
       <div class="container">
-        <h2 class="mb-4">Contact Us</h2>
-        <div class="row g-4">
+        <div class="row g-4 g-lg-5">
           <div class="col-md-5">
-            <ul class="list-unstyled text-muted">
-              <li class="mb-3"><i class="bi bi-geo-alt-fill text-success me-2"></i>Dhaka, Bangladesh</li>
-              <li class="mb-3"><i class="bi bi-envelope-fill text-success me-2"></i><a href="mailto:hello@chabazaar.example">hello@chabazaar.example</a></li>
-              <li class="mb-3"><i class="bi bi-clock-fill text-success me-2"></i>Sat–Thu, 10am – 8pm</li>
+            <h2 class="section-title">Ask us anything</h2>
+            <p class="text-body-secondary">Not sure which tea to try, or want to order in bulk for an office or event? Send us a message.</p>
+            <ul class="contact-list">
+              <li><i class="bi bi-geo-alt" aria-hidden="true"></i>Dhaka, Bangladesh</li>
+              <li><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:hello@chabazaar.example">hello@chabazaar.example</a></li>
+              <li><i class="bi bi-clock" aria-hidden="true"></i>Saturday to Thursday, 10am to 8pm</li>
             </ul>
           </div>
           <div class="col-md-7">
-            <form id="contactForm" class="needs-validation" novalidate>
+            <form id="contactForm" class="contact-form needs-validation" novalidate>
               <div class="row g-3">
                 <div class="col-sm-6">
-                  <label for="contactName" class="form-label">Name</label>
-                  <input type="text" class="form-control" id="contactName" required />
-                  <div class="invalid-feedback">Please enter your name.</div>
+                  <label for="contactName" class="form-label">Your name</label>
+                  <input type="text" class="form-control" id="contactName" autocomplete="name" required />
+                  <div class="invalid-feedback">Enter your name.</div>
                 </div>
                 <div class="col-sm-6">
                   <label for="contactEmail" class="form-label">Email</label>
-                  <input type="email" class="form-control" id="contactEmail" required />
-                  <div class="invalid-feedback">Please enter a valid email.</div>
+                  <input type="email" class="form-control" id="contactEmail" autocomplete="email" required />
+                  <div class="invalid-feedback">Enter an email address like name@example.com.</div>
                 </div>
                 <div class="col-12">
                   <label for="contactMessage" class="form-label">Message</label>
-                  <textarea class="form-control" id="contactMessage" rows="3" required></textarea>
-                  <div class="invalid-feedback">Please write a message.</div>
+                  <textarea class="form-control" id="contactMessage" rows="4" required></textarea>
+                  <div class="invalid-feedback">Write a message before sending.</div>
                 </div>
                 <div class="col-12">
-                  <button type="submit" class="btn btn-success">Send Message</button>
+                  <button type="submit" class="btn btn-garden">Send message</button>
                 </div>
               </div>
             </form>
@@ -135,25 +184,22 @@
     </section>
 
     <!-- Cart Offcanvas -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartLabel">
+    <div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartLabel">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="cartLabel">Your Cart</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <h2 class="offcanvas-title" id="cartLabel">Your cart</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button>
       </div>
       <div class="offcanvas-body d-flex flex-column">
         <div id="cart-items" class="vstack gap-3">
           <!-- JS renders cart items -->
         </div>
-        <div class="mt-auto pt-3 border-top">
-          <div class="d-flex justify-content-between text-muted"><span>Subtotal</span><span id="cart-subtotal">৳0</span></div>
-          <div class="d-flex justify-content-between text-muted mb-2"><span>Delivery</span><span id="cart-delivery">৳0</span></div>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="fs-5 fw-semibold">Total</span>
-            <span class="fs-4 fw-bold" id="cart-total">৳0</span>
-          </div>
+        <div class="cart-footer">
+          <div class="cart-row"><span>Subtotal</span><span id="cart-subtotal">৳0</span></div>
+          <div class="cart-row"><span>Delivery</span><span id="cart-delivery">৳0</span></div>
+          <div class="cart-row cart-total"><span>Total</span><span id="cart-total">৳0</span></div>
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-danger" id="clearCartBtn" type="button">Clear Cart</button>
-            <button class="btn btn-success" id="checkoutBtn" type="button">Checkout</button>
+            <button class="btn btn-liquor btn-lg" id="checkoutBtn" type="button">Checkout</button>
+            <button class="btn btn-link-muted" id="clearCartBtn" type="button">Empty cart</button>
           </div>
         </div>
       </div>
@@ -164,66 +210,70 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="checkoutLabel">Checkout</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h2 class="modal-title" id="checkoutLabel">Checkout</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close checkout"></button>
           </div>
           <form id="checkoutForm" class="needs-validation" novalidate>
             <div class="modal-body">
               <div class="row g-4">
                 <div class="col-md-7">
-                  <h6 class="mb-3">Delivery details</h6>
+                  <h3 class="form-section-title">Where should we deliver?</h3>
                   <div class="row g-3">
                     <div class="col-12">
                       <label for="custName" class="form-label">Full name</label>
                       <input type="text" class="form-control" id="custName" autocomplete="name" required />
-                      <div class="invalid-feedback">Please enter your name.</div>
+                      <div class="invalid-feedback">Enter the name for the delivery.</div>
                     </div>
                     <div class="col-sm-6">
-                      <label for="custPhone" class="form-label">Phone</label>
+                      <label for="custPhone" class="form-label">Mobile number</label>
                       <input type="tel" class="form-control" id="custPhone" autocomplete="tel" placeholder="01XXXXXXXXX" pattern="(\+?88)?01[3-9]\d{8}" required />
-                      <div class="invalid-feedback">Enter a valid Bangladeshi mobile number.</div>
+                      <div class="invalid-feedback">Enter an 11-digit number starting with 01.</div>
                     </div>
                     <div class="col-sm-6">
-                      <label for="custEmail" class="form-label">Email <span class="text-muted">(optional)</span></label>
+                      <label for="custEmail" class="form-label">Email <span class="optional">optional</span></label>
                       <input type="email" class="form-control" id="custEmail" autocomplete="email" />
-                      <div class="invalid-feedback">Enter a valid email.</div>
+                      <div class="invalid-feedback">Enter an email address like name@example.com.</div>
                     </div>
                     <div class="col-12">
                       <label for="custAddress" class="form-label">Address</label>
                       <textarea class="form-control" id="custAddress" rows="2" autocomplete="street-address" required></textarea>
-                      <div class="invalid-feedback">Please enter your delivery address.</div>
+                      <div class="invalid-feedback">Enter a house, road and area.</div>
                     </div>
                     <div class="col-sm-6">
                       <label for="custCity" class="form-label">City</label>
                       <input type="text" class="form-control" id="custCity" autocomplete="address-level2" required />
-                      <div class="invalid-feedback">Please enter your city.</div>
+                      <div class="invalid-feedback">Enter your city.</div>
                     </div>
                     <div class="col-sm-6">
-                      <label class="form-label d-block">Payment</label>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment" id="payCod" value="Cash on delivery" checked />
-                        <label class="form-check-label" for="payCod">Cash on delivery</label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment" id="payMobile" value="Mobile banking" />
-                        <label class="form-check-label" for="payMobile">Mobile banking (on delivery)</label>
-                      </div>
+                      <fieldset>
+                        <legend class="form-label">Payment on delivery</legend>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="payment" id="payCod" value="Cash on delivery" checked />
+                          <label class="form-check-label" for="payCod">Cash</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="payment" id="payMobile" value="Mobile banking" />
+                          <label class="form-check-label" for="payMobile">Mobile banking</label>
+                        </div>
+                      </fieldset>
                     </div>
                     <div class="col-12">
-                      <label for="custNotes" class="form-label">Order notes <span class="text-muted">(optional)</span></label>
-                      <input type="text" class="form-control" id="custNotes" />
+                      <label for="custNotes" class="form-label">Note for the rider <span class="optional">optional</span></label>
+                      <input type="text" class="form-control" id="custNotes" placeholder="e.g. Call when you reach the gate" />
                     </div>
                   </div>
                 </div>
                 <div class="col-md-5">
-                  <h6 class="mb-3">Order summary</h6>
-                  <ul class="list-group mb-3" id="checkout-summary"></ul>
+                  <div class="summary">
+                    <h3 class="form-section-title">Your order</h3>
+                    <ul class="summary-list" id="checkout-summary"></ul>
+                  </div>
                 </div>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Back</button>
-              <button type="submit" class="btn btn-success">Place Order</button>
+              <button type="button" class="btn btn-link-muted" data-bs-dismiss="modal">Back to cart</button>
+              <button type="submit" class="btn btn-liquor">Place order</button>
             </div>
           </form>
         </div>
@@ -233,13 +283,12 @@
     <!-- Order Confirmation Modal -->
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-center">
-          <div class="modal-body p-4">
-            <i class="bi bi-check-circle-fill text-success display-4"></i>
-            <h5 class="mt-3" id="confirmLabel">Thank you for your order!</h5>
-            <p class="text-muted mb-1">Order <strong id="confirm-order-id"></strong></p>
-            <p class="text-muted" id="confirm-message"></p>
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal">Continue Shopping</button>
+        <div class="modal-content confirm">
+          <div class="modal-body">
+            <p class="confirm-chest">Order <span id="confirm-order-id"></span></p>
+            <h2 class="confirm-title" id="confirmLabel">Order placed</h2>
+            <p id="confirm-message"></p>
+            <button type="button" class="btn btn-garden" data-bs-dismiss="modal">Keep browsing</button>
           </div>
         </div>
       </div>
@@ -247,16 +296,19 @@
 
     <!-- Toasts -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="appToast" class="toast align-items-center text-bg-success border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div id="appToast" class="toast app-toast" role="status" aria-live="polite" aria-atomic="true">
         <div class="d-flex">
           <div class="toast-body" id="appToastBody"></div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Dismiss"></button>
         </div>
       </div>
     </div>
 
-    <footer class="border-top py-4 text-center text-muted">
-      <small>© <span id="year"></span> Cha Bazaar. All rights reserved.</small>
+    <footer class="site-footer">
+      <div class="container">
+        <span class="wordmark">Cha Bazaar</span>
+        <small>© <span id="year"></span> Cha Bazaar, Dhaka</small>
+      </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

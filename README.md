@@ -12,6 +12,16 @@ A small, dependency-free e-commerce frontend for a tea shop, built with HTML, Bo
 - Order confirmation with an order ID; orders are saved in `localStorage` (`tea-shop-orders`)
 - About and Contact sections, toast notifications, responsive layout
 
+## Design
+
+The look is based on the stencilled wooden chests tea travels in from the estate. The hero shows one of these chests, and the rest of the page is a calm catalogue.
+
+- Colours: garden green `#173F2E`, bud green `#9BBF4A`, tea-liquor amber `#C27A14`, leaf-tint paper `#F1F4EC`
+- Type: Big Shoulders Stencil for headings, Hind Siliguri (Bengali and Latin) for text
+- Each tea shows its grade, origin and brewing temperature and time
+
+All colours and the type scale are CSS variables at the top of `styles.css`.
+
 ## Run
 
 Open `index.html` in a browser, or serve the folder locally:
