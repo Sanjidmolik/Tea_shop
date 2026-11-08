@@ -42,7 +42,9 @@ These work today (IMPLEMENTED) and must keep working after every change. Run TES
 - **`catalog.js` must stay strict JSON** after `window.CHA_CATALOG =` (the order server parses it). Never rename a SKU.
 - **Server rules must match:** `deliveryFee` in `shared.js` and `deliveryFee_` in `Code.gs`.
 - **Never show fake reviews, ratings, stock or discounts.** Reviews come only from `catalog.js` `reviews`; promo codes only from the Sheet.
-- **Script order:** Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `animations.js`.
+- **Script order:** Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `store.js` → `animations.js`.
+- **Sample listings** (`"sample": true` in `catalog.js`) must stay unbuyable in the browser *and* on the server until the owner replaces them with real data.
+- **URLs** `index.html?shop=…`, `?product=…` and `#tea/<slug>` are public links; keep them working.
 - **Design tokens** in `:root` of `styles.css`. Change values there, not with one-off hex codes.
 
 ## 3. How to work
@@ -83,4 +85,4 @@ Stop and ask the owner before:
 
 ## 6. Tests to run (v2)
 
-`npm test` must pass before every commit that touches code: static checks, 25 server tests and the browser suite. Add a test when you fix a bug. Never weaken a test to make it pass.
+`npm test` must pass before every commit that touches code: static checks, 27 server tests and the browser suite. Add a test when you fix a bug. Never weaken a test to make it pass.

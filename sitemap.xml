@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Real products and categories only (sample listings are excluded). Update when catalog.js changes. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://sanjidmolik.github.io/Tea_shop/</loc><lastmod>2026-11-07</lastmod><priority>1.0</priority></url>
-  <url><loc>https://sanjidmolik.github.io/Tea_shop/delivery.html</loc><lastmod>2026-11-07</lastmod><priority>0.5</priority></url>
-  <url><loc>https://sanjidmolik.github.io/Tea_shop/returns.html</loc><lastmod>2026-11-07</lastmod><priority>0.5</priority></url>
-  <url><loc>https://sanjidmolik.github.io/Tea_shop/privacy.html</loc><lastmod>2026-11-07</lastmod><priority>0.3</priority></url>
-  <url><loc>https://sanjidmolik.github.io/Tea_shop/terms.html</loc><lastmod>2026-11-07</lastmod><priority>0.3</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/</loc><lastmod>2026-11-08</lastmod><priority>1.0</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=tea</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=teaware</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=gifts</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=black-tea</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=green-tea</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=chai</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?shop=herbal</loc><lastmod>2026-11-08</lastmod><priority>0.7</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=darjeeling</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=assam</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=masala-chai</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=green-tea</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=jasmine</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=premium-blend</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=chamomile</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/?product=mixed-tea</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/delivery.html</loc><lastmod>2026-11-08</lastmod><priority>0.5</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/returns.html</loc><lastmod>2026-11-08</lastmod><priority>0.5</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/privacy.html</loc><lastmod>2026-11-08</lastmod><priority>0.3</priority></url>
+  <url><loc>https://sanjidmolik.github.io/Tea_shop/terms.html</loc><lastmod>2026-11-08</lastmod><priority>0.3</priority></url>
 </urlset>

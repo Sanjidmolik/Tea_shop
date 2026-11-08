@@ -39,7 +39,7 @@ const I18N = {
     "cart.free": "Free",
     "cart.freeMore": "Add {amount} more for free delivery ({area}).",
     "cart.freeYes": "Your order ships free ({area}).",
-    "cart.itemMeta": "{price} per {size} pack",
+    "cart.itemMeta": "{size}, {price} each",
     "cart.remove": "Remove {name}",
     "cart.qtyOf": "Quantity of {name}",
     "cart.less": "One less",
@@ -220,7 +220,7 @@ const I18N = {
     "cart.free": "ফ্রি",
     "cart.freeMore": "ফ্রি ডেলিভারির জন্য আরও {amount}-এর পণ্য যোগ করুন ({area})।",
     "cart.freeYes": "আপনার অর্ডারে ডেলিভারি ফ্রি ({area})।",
-    "cart.itemMeta": "প্রতি {size} প্যাক {price}",
+    "cart.itemMeta": "{size}, প্রতিটি {price}",
     "cart.remove": "{name} সরান",
     "cart.qtyOf": "{name}-এর পরিমাণ",
     "cart.less": "একটি কমান",
@@ -350,6 +350,106 @@ I18N.en["table.fee"] = "Charge";
 I18N.en["table.eta"] = "Estimated time";
 I18N.en["motion.pause"] = "Pause animation";
 I18N.en["motion.play"] = "Play animation";
+
+// Store navigation (v3)
+I18N.en["skip.main"] = "Skip to main content";
+I18N.en["shop.all"] = "All products";
+I18N.en["shop.allIn"] = "All {name}";
+I18N.en["shop.count"] = "{n} items";
+I18N.en["shop.results"] = "{n} products";
+I18N.en["shop.noneFilters"] = "No products match these filters.";
+I18N.en["shop.catLabel"] = "Categories";
+I18N.en["filters.title"] = "Filters";
+I18N.en["filters.close"] = "Close filters";
+I18N.en["filters.clear"] = "Clear filters";
+I18N.en["filters.origin"] = "Origin";
+I18N.en["filters.caffeine"] = "Caffeine";
+I18N.en["filters.flavour"] = "Flavour";
+I18N.en["filters.price"] = "Price";
+I18N.en["filters.none"] = "No filters for this category.";
+I18N.en["mega.byType"] = "Shop by type";
+I18N.en["mega.shopAll"] = "Shop all {name}";
+I18N.en["crumbs.home"] = "Home";
+I18N.en["crumbs.label"] = "Breadcrumb";
+I18N.en["home.quick"] = "Quick picks:";
+I18N.en["home.fromBd"] = "Grown in Bangladesh";
+I18N.en["home.budget"] = "Lowest price first";
+I18N.en["img.soon"] = "Photo coming soon";
+I18N.en["img.coming"] = "{name}: photo coming soon";
+I18N.en["sample.flag"] = "Sample listing";
+I18N.en["sample.title"] = "Placeholder product with a predicted price. Not for sale yet.";
+I18N.en["sample.soon"] = "Coming soon";
+I18N.en["sample.explain"] = "This is a sample listing: the product details and price are placeholders and it can't be ordered yet.";
+I18N.en["qv.button"] = "Quick view";
+I18N.en["qv.open"] = "Quick view: {name}";
+I18N.en["qv.details"] = "View full details";
+I18N.en["pp.notFound"] = "We couldn't find that product.";
+I18N.en["pp.aboutTea"] = "About this tea";
+I18N.en["pp.about"] = "About this product";
+I18N.en["pp.noReviews"] = "No reviews yet.";
+I18N.en["pp.related"] = "You may also like";
+I18N.en["pp.ask"] = "Ask about this on WhatsApp";
+I18N.en["wa.productQuestion"] = "Hi Cha Bazaar, I have a question about {name}.";
+I18N.bn["skip.main"] = "মূল অংশে যান";
+I18N.bn["nav.tea"] = "চা";
+I18N.bn["nav.teaware"] = "চায়ের সরঞ্জাম";
+I18N.bn["nav.gifts"] = "উপহার";
+I18N.bn["home.shopBy"] = "ধরন অনুযায়ী কিনুন";
+I18N.bn["home.allTea"] = "সব চা দেখুন";
+I18N.bn["home.gifts"] = "উপহার ও স্যাম্পলার";
+I18N.bn["home.allGifts"] = "সব উপহার দেখুন";
+I18N.bn["home.teaware"] = "ঠিকভাবে বানান";
+I18N.bn["home.allTeaware"] = "সব সরঞ্জাম দেখুন";
+I18N.bn["home.quick"] = "দ্রুত বাছাই:";
+I18N.bn["home.fromBd"] = "বাংলাদেশে উৎপাদিত";
+I18N.bn["home.budget"] = "কম দাম আগে";
+I18N.bn["shop.searchPh"] = "খুঁজুন";
+I18N.bn["shop.all"] = "সব পণ্য";
+I18N.bn["shop.allIn"] = "সব {name}";
+I18N.bn["shop.count"] = "{n}টি পণ্য";
+I18N.bn["shop.results"] = "{n}টি পণ্য";
+I18N.bn["shop.noneFilters"] = "এই ফিল্টারের সাথে মেলে এমন কোনো পণ্য নেই।";
+I18N.bn["shop.catLabel"] = "বিভাগ";
+I18N.bn["filters.title"] = "ফিল্টার";
+I18N.bn["filters.close"] = "ফিল্টার বন্ধ করুন";
+I18N.bn["filters.clear"] = "ফিল্টার মুছুন";
+I18N.bn["filters.origin"] = "উৎস";
+I18N.bn["filters.caffeine"] = "ক্যাফেইন";
+I18N.bn["filters.flavour"] = "স্বাদ";
+I18N.bn["filters.price"] = "দাম";
+I18N.bn["filters.none"] = "এই বিভাগে কোনো ফিল্টার নেই।";
+I18N.bn["mega.byType"] = "ধরন অনুযায়ী";
+I18N.bn["mega.shopAll"] = "সব {name} দেখুন";
+I18N.bn["crumbs.home"] = "হোম";
+I18N.bn["crumbs.label"] = "পথনির্দেশ";
+I18N.bn["img.soon"] = "ছবি শিগগিরই আসছে";
+I18N.bn["img.coming"] = "{name}: ছবি শিগগিরই আসছে";
+I18N.bn["sample.flag"] = "নমুনা তালিকা";
+I18N.bn["sample.title"] = "আনুমানিক দামের নমুনা পণ্য। এখনো বিক্রি হচ্ছে না।";
+I18N.bn["sample.soon"] = "শিগগিরই আসছে";
+I18N.bn["sample.explain"] = "এটি একটি নমুনা তালিকা: পণ্যের তথ্য ও দাম আনুমানিক, এবং এখনো অর্ডার করা যায় না।";
+I18N.bn["qv.button"] = "এক নজরে";
+I18N.bn["qv.open"] = "এক নজরে: {name}";
+I18N.bn["qv.details"] = "বিস্তারিত দেখুন";
+I18N.bn["pp.notFound"] = "পণ্যটি খুঁজে পাওয়া যায়নি।";
+I18N.bn["pp.aboutTea"] = "এই চা সম্পর্কে";
+I18N.bn["pp.about"] = "এই পণ্য সম্পর্কে";
+I18N.bn["pp.noReviews"] = "এখনো কোনো রিভিউ নেই।";
+I18N.bn["pp.related"] = "আপনার পছন্দ হতে পারে";
+I18N.bn["pp.ask"] = "হোয়াটসঅ্যাপে এ বিষয়ে জিজ্ঞেস করুন";
+I18N.bn["wa.productQuestion"] = "হ্যালো চা বাজার, {name} সম্পর্কে আমার একটি প্রশ্ন আছে।";
+I18N.bn["footer.shop"] = "কেনাকাটা";
+I18N.bn["shop.searchLabel"] = "দোকানে খুঁজুন";
+I18N.bn["shop.sortLabel"] = "সাজান";
+
+I18N.en["promise.payment"] = "Pay by cash, bKash or Nagad";
+I18N.en["trust.guarantee"] = "Not fresh? We replace it. Your satisfaction is our priority.";
+I18N.en["reviews.title"] = "What customers say";
+
+I18N.en["variant.size"] = "Size";
+I18N.en["shop.count1"] = "1 item";
+I18N.bn["variant.size"] = "আকার";
+I18N.bn["shop.count1"] = "১টি পণ্য";
 
 let CURRENT_LANG = "en";
 const getLang = () => CURRENT_LANG;

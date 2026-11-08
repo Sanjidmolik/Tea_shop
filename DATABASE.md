@@ -52,6 +52,21 @@ Current packs (prices, grades and origins are the owner's to confirm, PRD Q-6):
 | CB-CHAM-100 / CB-CHAM-250 | Chamomile Calm | 100g / 250g | *not set (hidden)* | — |
 | CB-MIXD-200 | Everyday Mixed Tea | 200g | 350 | 175 |
 
+### v3 structure additions
+
+| Key | Purpose |
+|---|---|
+| `departments[]` | `{ id, label{en,bn}, intro{en,bn} }`: tea, teaware, gifts (top menu) |
+| `categories[]` | `{ id, department, icon, label, intro }`: 12 categories (black-tea, green-tea, chai, herbal, oolong, white-tea, teapots, cups, infusers, storage, gift-sets, samplers) |
+| `filters` | `caffeine`, `flavours`, `regions`, `prices` (bands with `min`/`max`), each option `{ id, label{en,bn} }` |
+| `collections[]` | `{ id, label, intro }`; products list ids in `collections` (home page uses `featured`) |
+| `products[].department` / `.category` | Must match the ids above (checked by `npm test`) |
+| `products[].caffeine` / `.flavours` / `.region` | Filter tags (real teas: **owner to confirm**) |
+| `products[].sample` | `true` = placeholder listing with a predicted price; never sold |
+| `products[].image` | May be `null` (placeholder tile) |
+| `products[].details` | Short spec line for teaware and gifts |
+| `variants[].label` | `{ en, bn }` size name when there's no `weightG` (e.g. "600 ml") |
+
 ## 2. Google Sheet (IMPLEMENTED in `Code.gs`; created by `setup()`)
 
 ### `Orders`: one row per order

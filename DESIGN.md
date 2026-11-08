@@ -188,3 +188,18 @@ Line length: the hero lead is capped at 34ch and About paragraphs at 58ch, keepi
 - Prices read "৳650" with "per 100g" underneath. **PROPOSED (P-05):** add a per-100g unit price.
 - Error messages say how to fix the problem and never apologise.
 - Placeholder content to replace (**TBD**): `hello@chabazaar.example`, "Dhaka, Bangladesh", "Saturday to Thursday, 10am to 8pm", and every price, grade and origin until the owner confirms them (PRD Q-3, Q-6).
+
+
+## 10. Store navigation (v3)
+
+| Component | Notes |
+|---|---|
+| Mega menu (`.mega-menu`) | Full-width panel under the nav, paper background, column titles in amber, a green promo card; stacks inside the mobile menu |
+| Category tiles (`.cat-tile`) | White tiles with an amber Bootstrap icon, name and item count |
+| Quick-pick chips (`.chip-link`) | Rounded links for common filters |
+| Breadcrumbs (`.crumbs`) | "Home › Tea › Black tea" |
+| Filter sidebar (`.filters`) | 15rem column on desktop; Bootstrap `offcanvas-lg` drawer below 992px |
+| Quick view button (`.quick-view-btn`) | White pill over the card image; card title and image now open the product page |
+| Photo placeholder (`.img-placeholder`) | Plywood-tint tile with a category icon and "Photo coming soon" in stencil |
+| Sample listing | Dashed card border, amber "Sample listing" flag, grey "Coming soon" button |
+| Product page (`.product-page`) | Two columns: image and buy box (size chips, quantity, amber Add to cart, delivery/payment/guarantee list), then details, reviews and related cards |

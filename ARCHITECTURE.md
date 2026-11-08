@@ -10,7 +10,7 @@
 | Pages | Static HTML: `index.html` + 4 policy pages | No build step, no framework |
 | Styling | CSS custom properties (`styles.css`, `animations.css`) + Bootstrap 5.3.3 | Bootstrap and Icons 1.11.3 from jsDelivr with **SRI hashes** |
 | Fonts | Big Shoulders Stencil, Hind Siliguri (Google Fonts) | Hind Siliguri renders Bangla |
-| Front-end logic | Vanilla JavaScript (ES2020, classic scripts) | `config.js`, `catalog.js`, `i18n.js`, `shared.js`, `analytics.js`, `app.js`, `animations.js` |
+| Front-end logic | Vanilla JavaScript (ES2020, classic scripts) | `config.js`, `catalog.js`, `i18n.js`, `shared.js`, `analytics.js`, `app.js`, `store.js`, `animations.js` |
 | Order server | **Google Apps Script** web app (V8), bound to a Google Sheet | `apps-script/Code.gs`, `appsscript.json` |
 | Data | `catalog.js`, Google Sheet, browser `localStorage` | See DATABASE.md |
 | Hosting | Any static host; GitHub Pages expected (`https://sanjidmolik.github.io/Tea_shop/`) | Pages status TBD |
@@ -30,7 +30,8 @@ Tea_shop/
 ├── i18n.js                    English/Bangla strings, t(), applyI18n()
 ├── shared.js                  shared helpers (contact links, delivery fee, language, setup notice)
 ├── analytics.js               optional Plausible / GA4 (consent) → chaTrack()
-├── app.js                     shop logic
+├── app.js                     cart, product cards, quick view, checkout, contact
+├── store.js                   menus, home sections, shop listing + filters, product pages, URL routing
 ├── animations.js / .css       optional motion layer (+ pause control)
 ├── styles.css                 design tokens + components
 ├── apps-script/
@@ -80,7 +81,9 @@ flowchart TB
   GF[Google Fonts] --> Browser
 ```
 
-**Script order** (all classic scripts at the end of `<body>`): Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `animations.js`. Policy pages load only `config.js`, `catalog.js`, `i18n.js` and `shared.js`.
+**Script order** (all classic scripts at the end of `<body>`): Bootstrap bundle → `config.js` → `catalog.js` → `i18n.js` → `shared.js` → `analytics.js` → `app.js` → `store.js` → `animations.js`.
+
+**Views (v3):** `index.html` holds three views, switched by `store.js` without reloading (History API): home (`index.html`), shop listing (`?shop=<department|category>&origin=…&caffeine=…&flavour=…&price=…&q=…&sort=…`) and product page (`?product=<slug>`). `#tea/<slug>` opens the quick view over any view. Each view sets its own title, description and canonical URL. Same-page links are intercepted; other links load normally. Policy pages load only `config.js`, `catalog.js`, `i18n.js` and `shared.js`.
 
 ### Design decisions
 

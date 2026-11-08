@@ -117,6 +117,7 @@ Sending the same `clientRequestId` again within 6 hours returns this same respon
 | `invalid_name` / `invalid_phone` / `invalid_email` / `invalid_address` / `invalid_area` / `invalid_payment` | Field validation | `field` | Marks the field, focuses it |
 | `invalid_reply` / `invalid_message` | Contact form validation | `field` | Error text with alternatives |
 | `invalid_items` | Empty, unknown or unpriced SKU, bad quantity | `sku` (sometimes) | "Something in your cart has changed" |
+| `sample_product` | SKU belongs to a `"sample": true` listing (v3) | `sku` | Generic error (samples can't reach the cart in the browser anyway) |
 | `sold_out` | Pack has `stock: 0` | `sku` | Names the tea |
 | `insufficient_stock` | More than `stock` | `sku`, `available` | Names the tea and how many are left |
 | `invalid_promo` / `promo_min_subtotal` | Promo not valid / subtotal too low | `minSubtotal` | Shown under the promo field |
@@ -170,7 +171,8 @@ Events: `cha:lang` (on `document`) after a language change.
 
 Renaming any of these breaks the scripts (see AGENTS.md).
 
-- **Shop:** `cart-count`, `searchInput`, `sortSelect`, `category-filters`, `product-grid`, `samplers`, `sampler-grid`, `trust`, `reviews`, `reviews-summary`, `review-list`, `products`
+- **Views (v3):** `main`, `[data-view="home|shop|product"]`, `category-tiles`, `shop-by-links`, `featured-grid`, `gift-grid`, `teaware-grid`, `shop-crumbs`, `shopTitle`, `shop-intro`, `shop-filters`, `filter-groups`, `filter-count`, `result-count`, `clearFilters`, `product-page` (+ `product-crumbs`, `pp-add`, `pp-qty` rendered inside), `[data-mega]`, `[data-footer-shop]`
+- **Shop:** `cart-count`, `searchInput`, `sortSelect`, `category-filters`, `product-grid`, `trust`, `reviews`, `reviews-summary`, `review-list`, `products` (v3: `samplers`/`sampler-grid` removed; gifts are a department)
 - **Contact:** `contactForm`, `contactName`, `contactEmail`, `contactMessage`, `contactWebsite`, `contact-status`
 - **Cart:** `cartOffcanvas`, `cart-items`, `recent-orders`, `cart-subtotal`, `cart-delivery`, `cart-total`, `cart-total-label`, `checkoutBtn`, `clearCartBtn`
 - **Quick view:** `teaModal`, `teaModalTitle`, `teaModalBody`
@@ -181,7 +183,7 @@ Renaming any of these breaks the scripts (see AGENTS.md).
 Attribute hooks:
 
 - **Text and links:** `data-i18n`, `data-i18n-attr`, `data-fill`, `data-fill-table`, `data-contact`, `data-link`, `data-lang-toggle`, `data-lang-block`
-- **Cart and filter controls:** `data-sku`, `data-category`, `data-reorder`, `data-qv-qty`
+- **Cart and filter controls:** `data-sku`, `data-category`, `data-reorder`, `data-qv-qty`, `data-pp-qty`, `data-filter`, `data-quickview`, `data-collection-title`
 
 Removed in v2: `custCity`, `payCod`, `payMobile`, `free-delivery-amount` (replaced by delivery areas, payment values `cod/bkash/nagad`, and `data-fill`).
 

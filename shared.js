@@ -101,6 +101,17 @@ const applyFills = (root = document) => {
   });
 };
 
+// ---- Footer "Shop" column (shop and policy pages) ----
+const renderFooterShop = () => {
+  const cats = CATALOG.categories || [];
+  const html = (CATALOG.departments || []).map((d) => {
+    const first = cats.filter((c) => c.department === d.id).slice(0, 3);
+    return `<li><a href="index.html?shop=${encodeURIComponent(d.id)}"><strong>${escapeHtml(localized(d.label))}</strong></a></li>` +
+      first.map((c) => `<li><a href="index.html?shop=${encodeURIComponent(c.id)}">${escapeHtml(localized(c.label))}</a></li>`).join("");
+  }).join("");
+  document.querySelectorAll("[data-footer-shop]").forEach((ul) => { ul.innerHTML = html; });
+};
+
 // ---- Language ----
 const LANG_KEY = "cha-lang";
 const setLang = (lang) => {
@@ -110,6 +121,7 @@ const setLang = (lang) => {
   applyI18n();
   applyFills();
   applyContactLinks();
+  renderFooterShop();
   document.querySelectorAll("[data-lang-toggle]").forEach((b) => {
     const next = lang === "en" ? "bn" : "en";
     b.textContent = next === "bn" ? "বাংলা" : "English";

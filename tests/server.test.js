@@ -52,7 +52,7 @@ test("valid order is saved with server-side totals (inside Dhaka ৳60)", () => 
   assert.strictEqual(row[15], 820);
   assert.strictEqual(row[16], "Cash on delivery");
   const items = g.rows("Order Items");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(items[0].slice(2))), ["CB-ASSM-200", "Assam Breakfast Blend", 200, 2, 380, 760]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(items[0].slice(2))), ["CB-ASSM-200", "Assam Breakfast Blend", "200g", 2, 380, 760]);
 });
 
 test("outside Dhaka charges ৳120 and never free", () => {
@@ -145,9 +145,25 @@ test("sold-out and low-stock packs are enforced", () => {
 });
 
 test("variant prices come from the catalogue", () => {
-  const g = createGas({ catalogText: catalogWith((c) => { c.products[6].variants[1].price = 900; }) });
+  const g = createGas({ catalogText: catalogWith((c) => { c.products.find((p) => p.slug === "chamomile").variants[1].price = 900; }) });
   const r = g.post(baseOrder({ items: [{ sku: "CB-CHAM-100", qty: 1 }, { sku: "CB-CHAM-050", qty: 1 }] }));
   assert.strictEqual(r.subtotal, 1380);
+});
+
+test("sample listings cannot be ordered", () => {
+  const g = createGas();
+  const r = g.post(baseOrder({ items: [{ sku: "CB-S-EARL-100", qty: 1 }] }));
+  assert.strictEqual(r.error, "sample_product");
+  assert.strictEqual(r.sku, "CB-S-EARL-100");
+  assert.strictEqual(g.rows("Orders").length, 0);
+});
+
+test("non-tea sizes use their label in the sheet", () => {
+  const g = createGas({ catalogText: catalogWith((c) => { delete c.products.find((p) => p.slug === "glass-teapot").sample; }) });
+  const r = g.post(baseOrder({ items: [{ sku: "CB-S-GPOT-600", qty: 1 }] }));
+  assert.strictEqual(r.ok, true, JSON.stringify(r));
+  assert.match(g.rows("Orders")[0][9], /1 × Glass Teapot with Infuser 600 ml @ ৳1450/);
+  assert.strictEqual(g.rows("Order Items")[0][4], "600 ml");
 });
 
 test("honeypot submissions are rejected and not saved", () => {
@@ -232,13 +248,21 @@ test("contact messages are validated and saved", () => {
 
 test("catalog.js is strict JSON after the assignment", () => {
   const c = readCatalog();
-  assert.ok(c.products.length >= 8);
+  assert.strictEqual(c.products.filter((p) => !p.sample).length, 8, "8 real products");
   const skus = c.products.flatMap((p) => p.variants.map((v) => v.sku));
   assert.strictEqual(new Set(skus).size, skus.length, "SKUs must be unique");
   const slugs = c.products.map((p) => p.slug);
   assert.strictEqual(new Set(slugs).size, slugs.length, "slugs must be unique");
+  const catIds = new Set(c.categories.map((x) => x.id));
+  const deptIds = new Set(c.departments.map((x) => x.id));
+  c.products.forEach((p) => {
+    assert.ok(deptIds.has(p.department), `${p.slug} department`);
+    assert.ok(catIds.has(p.category), `${p.slug} category`);
+    assert.strictEqual(c.categories.find((x) => x.id === p.category).department, p.department, `${p.slug} category/department`);
+  });
   c.products.forEach((p) => p.variants.forEach((v) => {
-    assert.ok(Number.isInteger(v.weightG) && v.weightG > 0, `${v.sku} weightG`);
+    if (p.department === "tea") assert.ok(Number.isInteger(v.weightG) && v.weightG > 0, `${v.sku} weightG`);
+    else assert.ok(v.label && v.label.en && v.label.bn, `${v.sku} label`);
     assert.ok(v.price === null || (typeof v.price === "number" && v.price > 0), `${v.sku} price`);
     assert.ok(v.stock === null || Number.isInteger(v.stock), `${v.sku} stock`);
   }));
