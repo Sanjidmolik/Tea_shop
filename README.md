@@ -103,4 +103,6 @@ If you use your own domain, update `SITE_URL` in `config.js`, the canonical/OG U
 
 ## Licence
 
-TBD. Product photo licences must also be confirmed before launch (see PRD A-14).
+The code is released under the [MIT License](LICENSE).
+
+Product photos in `Tea/` are **not** covered by the MIT License: their licences must be confirmed separately (see ASSESSMENT.md C-9). Fonts (Google Fonts) and Bootstrap keep their own licences.
