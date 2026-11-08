@@ -355,3 +355,34 @@ See AUTH_SECURITY.md §4.
 | P-21 | "Your recent orders" in the cart panel with Reorder (skips unavailable items) | `app.js` | — |
 | P-23 | `npm test`: static checks, 25 server tests (real `Code.gs` on simulated Google services), browser tests | `tests/` | — |
 | P-24 | SRI + `crossorigin` on all CDN files. CSP still proposed | `index.html`, policy pages | CSP |
+
+
+---
+
+## Store navigation (v3, 2026-11-08): IMPLEMENTED
+
+Organisation modelled on large tea retailers such as Adagio (structure only; Cha Bazaar's own design, text and photos).
+
+| ID | Feature | What was built | Where |
+|---|---|---|---|
+| P-25 | Catalogue taxonomy | `departments` (Tea, Teaware, Gifts), `categories` (12, with icons and intros), `filters` (origin, caffeine, flavour, price bands), `collections` (featured). Real teas tagged with caffeine, flavours and region (**owner to confirm**) | `catalog.js` |
+| P-26 | Mega menus | Tea / Teaware / Gifts dropdowns built from the catalogue: by type, origin, caffeine, flavour, plus a promo panel; keyboard accessible (Bootstrap dropdown) | `store.js` `renderMegaMenus` |
+| P-27 | Shop pages | `index.html?shop=<department or category>` with breadcrumb, intro, category chips with counts, filter sidebar (drawer on mobile) with live counts, search, sort, result count, clear filters. Filters are kept in the URL, so links like `?shop=tea&caffeine=none` can be shared | `store.js` |
+| P-28 | Product pages | `index.html?product=<slug>`: breadcrumb, large image, size chips, quantity, add to cart, delivery/payment/guarantee, WhatsApp question, details, reviews for that product (genuine only), "You may also like". Per-page title, description and canonical | `store.js` `renderProductPage` |
+| P-29 | Home sections | Shop-by-category tiles, quick-pick chips, featured teas, gifts and samplers band, teaware row | `index.html`, `store.js` `renderHome` |
+| P-30 | Multi-product support | Teaware and gifts use size labels ("600 ml", "Set of 6") instead of weights; server stores the size label | `catalog.js` `label`, `Code.gs` `sizeLabel_` |
+| P-31 | Sample listings | 15 placeholder products (7 teas, 5 teaware, 3 gifts) with predicted prices, marked `"sample": true`: "Sample listing" label, photo placeholder, "Coming soon" button; not in cart, structured data or sitemap; **refused by the server** | `catalog.js`, `app.js`, `Code.gs` |
+| P-32 | Footer shop column | Departments and top categories, on every page | `shared.js` `renderFooterShop` |
+
+**Acceptance (tested in `tests/e2e.test.js` 27–30):**
+- [x] The menu leads to category pages with correct products and breadcrumbs.
+- [x] Filters combine and update the URL, and back/forward works.
+- [x] Product pages render, add to cart and show related products.
+- [x] Samples can't be bought.
+- [x] No horizontal scroll on phones.
+
+**Owner to do:**
+- Replace each sample listing with real data (or delete it).
+- Confirm the caffeine, flavour and region tags on the real teas.
+- Choose which products are `featured`.
+- The future admin panel should edit `catalog.js` (or a store that generates it) and keep it strict JSON.

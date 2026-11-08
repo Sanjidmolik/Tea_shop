@@ -916,6 +916,10 @@ html[lang="bn"] .section-title { font-size: var(--step-3); }
 .promo-status.is-ok { color: var(--garden); }
 .promo-status.is-error { color: #B42318; }
 #placeOrderBtn { min-width: 10rem; }
+/* The checkout <form> wraps the modal body and footer. Make it the flex child Bootstrap's
+   scrollable modal expects, so the fields scroll and the header and Place order stay visible. */
+#checkoutForm { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+#checkoutForm > .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
 /* ---------- Recent orders ---------- */
 .recent-orders {
@@ -1055,3 +1059,152 @@ html[lang="bn"] .section-title { font-size: var(--step-3); }
   .tea-buy { flex-wrap: wrap; }
   .consent-bar { left: 1rem; }
 }
+
+/* =========================================================
+   Store navigation (v3): mega menu, home sections, shop listing,
+   product page. Same tokens as the rest of the site.
+   ========================================================= */
+
+/* ---------- Mega menu ---------- */
+.site-nav > .container { position: relative; }
+.dropdown-mega { position: static; }
+.site-nav .nav-link.active { color: var(--white); text-decoration: underline; text-decoration-color: var(--bud); text-underline-offset: 6px; }
+.mega-menu {
+  --bs-dropdown-bg: var(--paper);
+  --bs-dropdown-border-color: var(--line);
+  --bs-dropdown-link-color: var(--ink);
+  --bs-dropdown-link-hover-bg: rgba(23, 63, 46, .08);
+  --bs-dropdown-link-active-bg: var(--garden);
+  width: 100%;
+  left: 0;
+  right: 0;
+  margin-top: .5rem;
+  padding: 1.5rem 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, .35);
+}
+.mega-menu > .container { padding-inline: 1.25rem; }
+.mega-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1.25rem 2rem; }
+.mega-title { font-size: var(--step--1); font-weight: 600; color: var(--liquor-2); margin: 0 0 .5rem; }
+.mega-col .dropdown-item { padding: .3rem 0; border-radius: var(--radius-sm); white-space: normal; }
+.mega-col .dropdown-item:hover { padding-left: .35rem; }
+.mega-promo { padding: 1rem 1.1rem; background: var(--garden); color: var(--paper); border-radius: var(--radius); }
+.mega-promo-title { font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; text-transform: uppercase; line-height: 1; margin-bottom: .5rem; }
+.mega-promo p { font-size: .95rem; color: rgba(241, 244, 236, .85); }
+@media (max-width: 767.98px) {
+  .mega-menu { margin: 0 0 .75rem; padding: 1rem 0; box-shadow: none; border-radius: var(--radius); }
+  .mega-promo { display: none; }
+}
+
+/* ---------- Home sections ---------- */
+.home-section { padding-block: clamp(2.5rem, 5vw, 4rem); }
+.home-band { background: var(--white); border-block: 1px solid var(--line); }
+.section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .5rem 2rem; margin-bottom: 1.5rem; }
+.section-head .section-title { margin: 0; }
+.section-link { font-weight: 600; text-underline-offset: 4px; }
+.cat-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: .75rem; }
+.cat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  padding: 1rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+}
+.cat-tile:hover { border-color: var(--garden); color: var(--ink); }
+.cat-tile i { font-size: 1.6rem; color: var(--liquor); }
+.cat-tile-name { font-weight: 600; line-height: 1.25; }
+.cat-tile-meta { font-size: var(--step--1); color: var(--ink-soft); }
+.shop-by-links { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1.25rem; }
+.shop-by-label { font-weight: 600; margin-right: .25rem; }
+.chip-link {
+  padding: .3rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--garden);
+  font-size: .95rem;
+  text-decoration: none;
+}
+.chip-link:hover { border-color: var(--garden); }
+
+/* ---------- Breadcrumbs ---------- */
+.crumbs { display: flex; flex-wrap: wrap; gap: .25rem; margin: 0 0 1rem; padding: 0; list-style: none; font-size: .95rem; color: var(--ink-soft); }
+.crumbs li + li::before { content: "›"; margin-right: .35rem; color: var(--ink-soft); }
+.crumbs a { color: var(--ink-soft); }
+
+/* ---------- Shop listing ---------- */
+.shop-head .section-lead { margin: .5rem 0 0; }
+.shop-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+@media (min-width: 992px) { .shop-layout { grid-template-columns: 15rem 1fr; } }
+.filters { --bs-offcanvas-bg: var(--paper); }
+@media (min-width: 992px) { .filters .offcanvas-header { display: none; } .filters .offcanvas-body { display: block; padding: 0; overflow: visible; } }
+.filter-group { margin-bottom: 1.5rem; }
+.filter-group legend { font-size: var(--step-0); font-weight: 600; margin-bottom: .5rem; }
+.filter-group .form-check { margin-bottom: .35rem; }
+.filter-group .count { color: var(--ink-soft); font-size: var(--step--1); }
+.results-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-bottom: 1rem; }
+.result-count { color: var(--ink-soft); }
+.filter-count { font-weight: 600; }
+
+/* ---------- Cards: quick view button, placeholders, samples ---------- */
+.tea-media { position: relative; }
+.quick-view-btn {
+  position: absolute;
+  right: .6rem;
+  bottom: .6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  min-height: 2.25rem;
+  padding: .25rem .7rem;
+  background: rgba(255, 255, 255, .92);
+  color: var(--garden);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  font-weight: 600;
+}
+.quick-view-btn:hover { background: var(--white); border-color: var(--garden); }
+.img-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background:
+    repeating-linear-gradient(178deg, rgba(120, 80, 40, .08) 0 2px, transparent 2px 9px),
+    #E9DCC4;
+  color: rgba(26, 33, 25, .7);
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.img-placeholder i { font-size: 2.6rem; color: var(--garden); }
+.tea.is-sample { border-style: dashed; }
+.tea-actions .sample-flag { margin: 0; }
+.tea.is-sample .add-to-cart:disabled { --bs-btn-disabled-bg: #E3E8DC; --bs-btn-disabled-border-color: var(--line); --bs-btn-disabled-color: var(--ink-soft); --bs-btn-disabled-opacity: 1; }
+
+/* ---------- Product page ---------- */
+.product-page { padding-block: clamp(1.5rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem); }
+.pp-img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); background: #E3E8DC; }
+.product-page .img-placeholder { border-radius: var(--radius); }
+.pp-title { font-size: var(--step-3); font-weight: 600; line-height: 1.15; margin-bottom: .5rem; }
+.pp-desc { font-size: 1.1rem; color: var(--ink-soft); }
+.pp-price .price-now { font-size: var(--step-2); }
+.pp-assure { list-style: none; padding: 0; margin: 1.5rem 0 .75rem; border-top: 1px dashed var(--line); }
+.pp-assure li { display: flex; gap: .6rem; padding: .6rem 0; border-bottom: 1px dashed var(--line); color: var(--ink-soft); }
+.pp-assure i { color: var(--liquor); }
+.pp-more { margin-top: 2.5rem; }
+.pp-h2 { font-size: var(--step-1); font-weight: 600; }
+.pp-related { margin-top: 3rem; }
+
+/* Bangla: stencil has no Bangla glyphs */
+html[lang="bn"] .mega-promo-title,
+html[lang="bn"] .img-placeholder { font-family: var(--font-body); font-weight: 600; text-transform: none; letter-spacing: 0; }

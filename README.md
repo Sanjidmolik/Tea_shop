@@ -2,12 +2,13 @@
 
 A Bangladeshi online tea shop. You can browse estate teas from Sylhet, Assam and Darjeeling, choose pack sizes, and order with cash on delivery, bKash or Nagad. Orders go to a private Google Sheet through a Google Apps Script server that re-checks every price. The site is plain HTML, CSS and JavaScript on Bootstrap 5, with **no build step**. It's available in English and Bangla.
 
-> **Before going live**, fill in `config.js` and deploy the order server (`apps-script/README.md`). Until `ORDER_ENDPOINT` is set, checkout refuses to place orders and points customers to WhatsApp or phone. It never pretends an order went through.
+> **Project status (2026-11-08): finished as a sample e-commerce website.** Everything below works and is tested (`npm test`: static checks, 27 server tests, 32 browser tests). To take real orders, deploy the order server (`apps-script/README.md`) and fill in `config.js`. Until then, checkout refuses orders and never fakes a confirmation. The 15 products marked "Sample listing" are placeholders and can't be bought. Planned next steps that were not built are in [ASSESSMENT.md](ASSESSMENT.md).
 
 ## Features
 
 | Area | What it does |
 |---|---|
+| Store layout (v3) | Tea / Teaware / Gifts mega menus; category pages (`?shop=black-tea`) with a filter sidebar (origin, caffeine, flavour, price), search and sort; full product pages (`?product=darjeeling`) with related products; home page with category tiles, featured teas, gifts and teaware; 15 clearly marked **sample listings** (not for sale) as templates |
 | Catalogue | 8 teas with grade, origin, tasting notes, ingredients and brewing guide; pack sizes; price per 100g; sold-out and low-stock labels (from real stock numbers only) |
 | Quick view | Click a tea for full details, pack size, quantity and **Copy link**. Links like `#tea/darjeeling` open it directly; back/forward work |
 | Cart | Pack-size aware, saved in the browser, synced across tabs, free-delivery progress, reorder from recent orders |
@@ -42,7 +43,7 @@ Open http://localhost:8000. A yellow **Setup needed** bar lists any settings sti
 | File | What to change |
 |---|---|
 | `config.js` | Order server URL, phone, WhatsApp, Facebook, email, bKash/Nagad numbers, return window, analytics |
-| `catalog.js` | Products, pack sizes and prices, stock, delivery charges, genuine reviews. **Keep it strict JSON** (see the comment at the top) |
+| `catalog.js` | Departments, categories, filters, collections, products (incl. sample listings to replace), sizes and prices, stock, delivery charges, genuine reviews. **Keep it strict JSON** (see the comment at the top) |
 | `apps-script/` | The order server. Follow `apps-script/README.md` once |
 
 Phone numbers use the international format without `+`, e.g. `8801712345678`.
@@ -69,7 +70,8 @@ config.js             business settings (public, no secrets)
 catalog.js            products, prices, pack sizes, stock, delivery charges, reviews
 i18n.js               English and Bangla text
 shared.js             helpers shared by every page (contact links, language, delivery)
-app.js                shop logic: catalogue, cart, quick view, checkout, contact
+app.js                cart, product cards, quick view, checkout, contact
+store.js              menus, home sections, shop listing + filters, product pages, URLs
 analytics.js          optional Plausible / GA4
 animations.js / .css  optional motion layer (shop works without it)
 styles.css            design tokens and components

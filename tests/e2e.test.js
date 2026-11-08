@@ -11,7 +11,7 @@ const { start } = require("./mock-server");
 const PORT = 8791;
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
-let BASE, browser;
+let BASE, SHOP, browser;
 
 const TEST_CONFIG = {
   ORDER_ENDPOINT: `http://localhost:${PORT}/exec`,
@@ -84,14 +84,17 @@ async function fillCustomer(page, phone = "01712345678") {
 test("1. Homepage loads without errors", async () => {
   const page = await newPage();
   await page.goto(BASE);
-  await page.waitForSelector(".tea");
-  assert.strictEqual(await page.locator("#product-grid .tea").count(), 8);
+  await page.waitForSelector("#featured-grid .tea");
+  assert.ok(await page.isVisible("#category-tiles .cat-tile"));
+  await page.goto(SHOP);
+  await page.waitForSelector("#product-grid .tea");
+  assert.strictEqual(await page.locator("#product-grid .tea:not(.is-sample)").count(), 8, "8 real teas");
   assert.deepStrictEqual(page.errors, []);
 });
 
 test("2. Product cards show grade, price, pack size and price per 100g; images have dimensions", async () => {
   const page = await newPage();
-  await page.goto(BASE);
+  await page.goto(SHOP);
   const card = page.locator('.tea[data-product="2"]');
   assert.match(await card.innerText(), /BOP/);
   assert.match(await card.locator(".tea-price").innerText(), /৳380[\s\S]*per 200g pack[\s\S]*৳190 per 100g/);
@@ -106,8 +109,9 @@ test("2. Product cards show grade, price, pack size and price per 100g; images h
 
 test("3. Product quick view opens with details and #tea/<slug> URL", async () => {
   const page = await newPage();
-  await page.goto(BASE);
-  await page.click('.tea[data-product="1"] .tea-link');
+  await page.goto(SHOP);
+  const listTitle = await page.title();
+  await page.click('.tea[data-product="1"] .quick-view-btn');
   await page.waitForSelector("#teaModal.show");
   assert.strictEqual(new URL(page.url()).hash, "#tea/darjeeling");
   await modalReady(page, "teaModal");
@@ -120,14 +124,14 @@ test("3. Product quick view opens with details and #tea/<slug> URL", async () =>
   await page.keyboard.press("Escape");
   await page.waitForSelector("#teaModal", { state: "hidden" });
   await page.waitForFunction(() => location.hash === "", null, { timeout: 3000 });
-  assert.strictEqual(await page.title(), "Cha Bazaar • Estate Teas, Packed Fresh | Tea Delivery in Bangladesh");
+  assert.strictEqual(await page.title(), listTitle, "title restored");
 });
 
 test("4. Pack sizes update price, unit price, cart and checkout", async () => {
   const catalog = catalogJs((c) => { c.products.find((p) => p.slug === "chamomile").variants[1].price = 900; });
   const page = await newPage({ catalog });
-  await page.goto(BASE);
-  const select = page.locator("#card-size-7");
+  await page.goto(SHOP);
+  const select = page.locator("#shop-size-7");
   assert.deepStrictEqual(await select.locator("option").allInnerTexts(), ["50g, ৳480", "100g, ৳900"], "unpriced 250g stays hidden");
   await select.selectOption("CB-CHAM-100");
   const price = await page.locator('.tea[data-product="7"] .tea-price').innerText();
@@ -137,7 +141,7 @@ test("4. Pack sizes update price, unit price, cart and checkout", async () => {
   const cart = JSON.parse(await page.evaluate(() => localStorage.getItem("tea-shop-cart")));
   assert.deepStrictEqual(cart, [{ sku: "CB-CHAM-100", qty: 1 }]);
   await page.click(OPEN_CART);
-  assert.match(await page.locator("#cart-items").innerText(), /Chamomile Calm[\s\S]*৳900 per 100g pack/);
+  assert.match(await page.locator("#cart-items").innerText(), /Chamomile Calm[\s\S]*100g, ৳900 each/);
   await page.click("#checkoutBtn");
   await page.waitForSelector("#checkoutModal.show");
   assert.match(await page.locator("#checkout-summary").innerText(), /Chamomile Calm 100g × 1[\s\S]*৳900/);
@@ -232,7 +236,7 @@ test("11. Order is saved to the Sheet with all fields; confirmation shows the se
   assert.match(productsText, /2 × Assam Breakfast Blend 200g @ ৳380 = ৳760/);
   assert.deepStrictEqual([qty, subtotal, discount, delivery, total, payment], [2, 760, 0, 120, 880, "bKash (manual)"]);
   const items = (await rows("Order Items")).rows;
-  assert.deepStrictEqual(items[0].slice(2), ["CB-ASSM-200", "Assam Breakfast Blend", 200, 2, 380, 760]);
+  assert.deepStrictEqual(items[0].slice(2), ["CB-ASSM-200", "Assam Breakfast Blend", "200g", 2, 380, 760]);
   assert.strictEqual(await page.textContent("#confirm-order-id"), id);
   assert.match(await page.textContent("#confirm-message"), /01712345678[\s\S]*3–5 days[\s\S]*৳880/);
   assert.match(await page.locator("#confirm-payment").innerText(), /bKash[\s\S]*01900-000000[\s\S]*৳880[\s\S]*CB-/);
@@ -359,12 +363,13 @@ test("16. Mobile layout: no horizontal scroll; floating WhatsApp clear of checko
 test("17. Keyboard: open quick view with Enter, close with Escape, focus returns", async () => {
   const page = await newPage();
   await page.goto(BASE);
-  await page.focus('.tea[data-product="2"] .tea-link');
+  await page.goto(SHOP);
+  await page.focus('.tea[data-product="2"] .quick-view-btn');
   await page.keyboard.press("Enter");
   await modalReady(page, "teaModal");
   await page.keyboard.press("Escape");
   await page.waitForSelector("#teaModal", { state: "hidden" });
-  await page.waitForFunction(() => document.activeElement.className === "tea-link", null, { timeout: 3000 });
+  await page.waitForFunction(() => document.activeElement.className === "quick-view-btn", null, { timeout: 3000 });
   await page.focus("#checkoutBtn").catch(() => {});
   // Every button and link has an accessible name
   const unnamed = await page.$$eval("button, a[href]", (els) => els.filter((e) => e.offsetParent !== null && !e.closest("[aria-hidden=true]") && !(e.getAttribute("aria-label") || e.textContent.trim())).map((e) => e.outerHTML.slice(0, 80)));
@@ -397,25 +402,25 @@ test("19. Shareable product URLs: direct link, back/forward, invalid slug, copy 
   assert.strictEqual(await page.textContent("#teaModalTitle"), "Assam Breakfast Blend");
   await page.click("#qv-share");
   assert.match(await page.textContent("#qv-share"), /Link copied/);
-  assert.strictEqual(await page.evaluate(() => navigator.clipboard.readText()), `${BASE}#tea/assam`);
+  assert.strictEqual(await page.evaluate(() => navigator.clipboard.readText()), `${BASE}index.html?product=assam`);
   await page.click('#teaModal .btn-close');
   await page.waitForSelector("#teaModal", { state: "hidden" });
   // Back / forward
-  await page.click('.tea[data-product="7"] .tea-link');
+  await page.click('#featured-grid .tea[data-product="1"] .quick-view-btn');
   await modalReady(page, "teaModal");
   await page.goBack();
   await page.waitForSelector("#teaModal", { state: "hidden" });
   await page.goForward();
   await page.waitForSelector("#teaModal.show");
-  assert.strictEqual(await page.textContent("#teaModalTitle"), "Chamomile Calm");
+  assert.strictEqual(await page.textContent("#teaModalTitle"), "Darjeeling First Flush");
   // Invalid
   await page.goto(`${BASE}#tea/not-a-tea`);
   await page.waitForSelector(".toast.show");
   assert.match(await page.textContent("#appToastBody"), /couldn't find that tea/);
   assert.strictEqual(new URL(page.url()).hash, "");
   // Existing section links still work
-  await page.click('a.nav-link[href="#about"]');
-  assert.strictEqual(new URL(page.url()).hash, "#about");
+  await page.click('a.nav-link[href="index.html#contact"]');
+  assert.strictEqual(new URL(page.url()).hash, "#contact");
   assert.strictEqual(await page.locator("#teaModal.show").count(), 0);
 });
 
@@ -456,7 +461,7 @@ test("21. Bangla language toggle translates UI and keeps ৳ and product names",
   await page.goto(BASE);
   await page.click("[data-lang-toggle]");
   assert.strictEqual(await page.getAttribute("html", "lang"), "bn");
-  assert.strictEqual(await page.textContent('a.nav-link[href="#products"]'), "চা");
+  assert.strictEqual(await page.textContent('a.nav-link[data-i18n="nav.tea"]'), "চা");
   assert.match(await page.textContent(".add-to-cart >> nth=0"), /কার্টে যোগ করুন/);
   assert.match(await page.textContent('.tea[data-product="1"] .tea-name'), /Darjeeling First Flush/);
   assert.match(await page.textContent('.tea[data-product="1"] .tea-price'), /৳650/);
@@ -465,7 +470,7 @@ test("21. Bangla language toggle translates UI and keeps ৳ and product names",
   await page.reload();
   assert.strictEqual(await page.getAttribute("html", "lang"), "bn", "remembered");
   await page.click("[data-lang-toggle]");
-  assert.strictEqual(await page.textContent('a.nav-link[href="#products"]'), "Teas");
+  assert.strictEqual(await page.textContent('a.nav-link[data-i18n="nav.tea"]'), "Tea");
   assert.deepStrictEqual(page.errors, []);
 });
 
@@ -547,11 +552,11 @@ test("25. Sold-out and low-stock labels, sampler section and reviews only from r
     c.reviews = [{ name: "Real Customer", rating: 4, text: "Genuine review text.", date: "2026-10-01" }];
   });
   const page = await newPage({ catalog });
-  await page.goto(BASE);
+  await page.goto(SHOP);
   assert.ok(await page.isDisabled('.add-to-cart[data-sku="CB-DARJ-100"]'));
   assert.match(await page.textContent('.tea[data-product="1"] .stock-badge'), /Sold out/);
   assert.match(await page.textContent('.tea[data-product="2"] .stock-badge'), /Only 3 left/);
-  assert.ok(await page.isHidden("#samplers"), "no bundles configured");
+  await page.goto(BASE);
   assert.match(await page.textContent("#reviews-summary"), /4\.0 out of 5 from 1 reviews/);
   assert.strictEqual(await page.locator(".review.is-sample").count(), 0);
   const ld = await page.evaluate(() => JSON.parse(document.getElementById("structured-data").textContent));
@@ -570,10 +575,140 @@ test("26. Sample reviews are labelled and appear only in development", async () 
   assert.ok(await live.isHidden("#reviews"));
 });
 
+
+test("27. Mega menu and category pages (Adagio-style organisation)", async () => {
+  const page = await newPage();
+  await page.goto(BASE);
+  await page.click('a.nav-link[data-i18n="nav.tea"]');
+  const menu = page.locator('.mega-menu[data-mega="tea"]');
+  await menu.waitFor();
+  const text = await menu.innerText();
+  for (const s of ["Shop by type", "Black tea", "Oolong", "Origin", "Sylhet, Bangladesh", "Caffeine", "Caffeine-free", "Flavour", "Floral"]) assert.ok(text.includes(s), s);
+  await menu.locator("a", { hasText: "Black tea" }).first().click();
+  await page.waitForSelector('[data-view="shop"]:not([hidden])');
+  assert.match(page.url(), /\?shop=black-tea$/);
+  assert.strictEqual(await page.title(), "Black tea | Cha Bazaar");
+  assert.match(await page.locator("#shop-crumbs").innerText(), /Home[\s\S]*Tea[\s\S]*Black tea/);
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 6);
+  assert.strictEqual(await page.getAttribute('[data-category="black-tea"]', "aria-pressed"), "true");
+  // Category chip -> sibling category; back returns
+  await page.click('[data-category="herbal"]');
+  await page.waitForFunction(() => location.search === "?shop=herbal");
+  assert.strictEqual(await page.textContent("#shopTitle"), "Herbal and caffeine-free");
+  await page.goBack();
+  await page.waitForFunction(() => location.search === "?shop=black-tea");
+  assert.strictEqual(await page.textContent("#shopTitle"), "Black tea");
+  // Teaware and gifts departments
+  await page.goto(`${BASE}?shop=teaware`);
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 5);
+  await page.goto(`${BASE}?shop=gifts`);
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 3);
+  // Unknown category falls back to all products
+  await page.goto(`${BASE}?shop=nope`);
+  await page.waitForFunction(() => location.search === "?shop=all");
+  assert.deepStrictEqual(page.errors, []);
+});
+
+test("28. Filters: caffeine, origin, flavour, price, search; URL keeps state; clear", async () => {
+  const page = await newPage();
+  await page.goto(`${SHOP}&caffeine=none`);
+  assert.strictEqual(await page.textContent("#result-count"), "3 products");
+  assert.ok(await page.isChecked("#f-caffeine-none"));
+  await page.uncheck("#f-caffeine-none");
+  await page.check("#f-origin-sylhet");
+  assert.match(page.url(), /origin=sylhet/);
+  assert.doesNotMatch(page.url(), /caffeine=/);
+  const names = await page.locator("#product-grid .tea-name").allInnerTexts();
+  assert.ok(names.includes("Masala Chai") && !names.includes("Assam Breakfast Blend"));
+  await page.check("#f-flavour-malty");
+  await page.check("#f-price-under-400");
+  assert.deepStrictEqual((await page.locator("#product-grid .tea-name").allInnerTexts()).sort(), ["Everyday Mixed Tea"]);
+  await page.click("#clearFilters");
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 15);
+  await page.fill("#searchInput", "jasmine");
+  assert.match(page.url(), /q=jasmine/);
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 1);
+  await page.fill("#searchInput", "zzz");
+  await page.click("#resetFilters");
+  assert.strictEqual(await page.locator("#product-grid .tea").count(), 15);
+  // Mobile: filters live in a drawer
+  const m = await newPage({ viewport: { width: 390, height: 844 } });
+  await m.goto(SHOP);
+  assert.ok(await m.isHidden("#filter-groups"));
+  await m.click('[data-bs-toggle="offcanvas"][data-bs-target="#shop-filters"]');
+  await m.waitForSelector("#shop-filters.show");
+  await m.check("#f-caffeine-none");
+  assert.strictEqual(await m.textContent("#result-count"), "3 products");
+  assert.strictEqual(await m.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+});
+
+test("29. Product pages: details, sizes, add to cart, related, SEO, not found", async () => {
+  const page = await newPage();
+  await page.goto(SHOP);
+  await page.click('.tea[data-product="1"] .tea-link');
+  await page.waitForSelector('[data-view="product"]:not([hidden]) .pp-title');
+  assert.match(page.url(), /\?product=darjeeling$/);
+  assert.strictEqual(await page.textContent(".pp-title"), "Darjeeling First Flush");
+  assert.strictEqual(await page.title(), "Darjeeling First Flush | Cha Bazaar");
+  assert.match(await page.getAttribute('link[rel="canonical"]', "href"), /\?product=darjeeling$/);
+  assert.match(await page.locator("#product-crumbs").innerText(), /Home[\s\S]*Tea[\s\S]*Black tea[\s\S]*Darjeeling First Flush/);
+  const about = await page.locator(".pp-more").innerText();
+  for (const s of ["Tasting notes", "Ingredients", "How to brew", "Caffeine", "Medium", "No reviews yet."]) assert.ok(about.includes(s), s);
+  assert.ok(await page.locator(".pp-related .tea").count() >= 3);
+  await page.click('[data-pp-qty="1"]');
+  await page.click("#pp-add");
+  assert.strictEqual(await page.textContent("#cart-count"), "2");
+  await page.goBack();
+  await page.waitForSelector('[data-view="shop"]:not([hidden])');
+  await page.goto(`${BASE}?product=no-such-tea`);
+  assert.match(await page.textContent("#product-page"), /couldn't find that product/);
+  assert.deepStrictEqual(page.errors, []);
+});
+
+test("30. Sample listings are clearly marked and can never be bought", async () => {
+  await mock("reset", {});
+  const page = await newPage({ storage: { "tea-shop-cart": JSON.stringify([{ sku: "CB-S-EARL-100", qty: 1 }, { sku: "CB-ASSM-200", qty: 1 }]) } });
+  await page.goto(BASE);
+  assert.strictEqual(await page.textContent("#cart-count"), "1", "sample item ignored in cart");
+  const gift = page.locator("#gift-grid .tea").first();
+  assert.match(await gift.innerText(), /Sample listing[\s\S]*Coming soon/);
+  assert.ok(await gift.locator(".add-to-cart").isDisabled());
+  assert.ok(await gift.locator(".img-placeholder").isVisible());
+  await page.goto(`${BASE}?product=glass-teapot`);
+  assert.match(await page.textContent("#product-page"), /sample listing/i);
+  assert.ok(await page.isDisabled("#pp-add"));
+  assert.match(await page.locator(".qv-sizes legend").innerText(), /^Size$/);
+  const ld = await page.evaluate(() => JSON.parse(document.getElementById("structured-data").textContent));
+  assert.ok(!ld["@graph"].some((n) => /^CB-S-/.test(n.sku || "")), "samples not in structured data");
+});
+
+test("31. Checkout fits the screen: header and Place order stay visible, the form scrolls", async () => {
+  // Regression: the <form> wrapper broke Bootstrap's scrollable modal, so Place order was cut off.
+  for (const viewport of [{ width: 1917, height: 907 }, { width: 1280, height: 720 }, { width: 390, height: 844 }]) {
+    const page = await newPage({ viewport });
+    await page.goto(BASE);
+    await page.click('.add-to-cart[data-sku="CB-ASSM-200"]');
+    await page.click(OPEN_CART);
+    await page.click("#checkoutBtn");
+    await modalReady(page, "checkoutModal");
+    const box = await page.evaluate(() => {
+      const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+      const body = document.querySelector("#checkoutModal .modal-body");
+      return { vh: innerHeight, headerTop: r("#checkoutModal .modal-header").top, btnBottom: r("#placeOrderBtn").bottom,
+        scrolls: body.scrollHeight > body.clientHeight, canScroll: (body.scrollTop = 99999, body.scrollTop > 0) };
+    });
+    assert.ok(box.headerTop >= 0, `header visible at ${viewport.width}px`);
+    assert.ok(box.btnBottom <= box.vh, `Place order visible at ${viewport.width}px (bottom ${box.btnBottom} > ${box.vh})`);
+    assert.ok(box.scrolls && box.canScroll, `form scrolls at ${viewport.width}px`);
+    await page.context().close();
+  }
+});
+
 // ---------------------------------------------------------------------------
 (async () => {
   const srv = await start(PORT);
   BASE = srv.url;
+  SHOP = `${BASE}?shop=tea`;
   browser = await chromium.launch();
   const only = process.argv[2];
   let failed = 0, ran = 0;

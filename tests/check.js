@@ -24,7 +24,7 @@ const m = /^window\.CHA_CATALOG\s*=/m.exec(cat);
 let catalog = null;
 try { catalog = JSON.parse(cat.slice(m.index + m[0].length, cat.lastIndexOf(";"))); } catch (e) { problems.push(`catalog.js is not strict JSON: ${e.message}`); }
 if (catalog) {
-  for (const p of catalog.products) {
+  for (const p of catalog.products.filter((x) => x.image)) {
     for (const k of ["card", "large", "fallback"]) {
       const src = p.image[k];
       if (src && !/^https?:/.test(src)) ok(fs.existsSync(path.join(ROOT, src)), `catalog image missing: ${src}`);
@@ -43,7 +43,7 @@ for (const f of fs.readdirSync(ROOT).filter((x) => x.endsWith(".html"))) {
   ok(!dup.length, `${f}: duplicate ids ${[...new Set(dup)].join(", ")}`);
   for (const [, ref] of html.matchAll(/(?:src|href)="([^"#:]+?)(?:#[^"]*)?"/g)) {
     if (ref.startsWith("data:") || ref.startsWith("//")) continue;
-    ok(fs.existsSync(path.join(ROOT, ref)), `${f}: missing local file ${ref}`);
+    ok(fs.existsSync(path.join(ROOT, ref.split("?")[0])), `${f}: missing local file ${ref}`);
   }
   for (const [, key] of html.matchAll(/data-i18n="([^"]+)"/g)) ok(bn[key], `${f}: no Bangla text for "${key}"`);
   for (const [, attr] of html.matchAll(/data-i18n-attr="([^"]+)"/g)) {

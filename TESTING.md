@@ -8,8 +8,8 @@
 | Suite | Command | What it covers | Result (2026-11-07) |
 |---|---|---|---|
 | Static checks | `npm run check` | Syntax of every script and `Code.gs`, `catalog.js` strict JSON and image paths, duplicate HTML ids, missing local files, Bangla text for every `data-i18n` key, unknown `t()` keys, obvious secrets | Pass |
-| Server tests | `npm run test:server` | 25 tests of the **real** `apps-script/Code.gs` on simulated Google services (`tests/gas-mock.js`): totals, delivery, re-pricing, duplicates, IDs, validation, stock, honeypot, rate limits, formula injection, e-mail, catalogue cache and failure, promos, contact | 25/25 pass |
-| Browser tests | `npm run test:e2e` | 28 Playwright tests against `tests/mock-server.js` (site + `/exec` running `Code.gs`). Includes all 20 cases from the upgrade brief, plus Bangla, policy pages, contact, remember-me/reorder/migration, stock labels and sample reviews | 28/28 pass |
+| Server tests | `npm run test:server` | 27 tests of the **real** `apps-script/Code.gs` on simulated Google services (`tests/gas-mock.js`): totals, delivery, re-pricing, duplicates, IDs, validation, stock, honeypot, rate limits, formula injection, e-mail, catalogue cache and failure, promos, contact | 27/27 pass |
+| Browser tests | `npm run test:e2e` | 33 Playwright tests against `tests/mock-server.js` (site + `/exec` running `Code.gs`). Includes all 20 cases from the upgrade brief, plus Bangla, policy pages, contact, remember-me/reorder/migration, stock labels, sample reviews, and (v3) mega menu, category pages, filters, product pages and sample listings | 33/33 pass |
 | All | `npm test` | The three above | Pass |
 
 Setup once: `npm install` then `npx playwright install chromium`. If your network blocks cdn.jsdelivr.net, set `CDN_MIRROR` to a folder containing `bootstrap/` and `bootstrap-icons/` npm packages.

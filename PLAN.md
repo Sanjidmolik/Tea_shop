@@ -116,3 +116,19 @@ Feature statuses live in FEATURES.md. When an item ships, update its status to I
 | 7 | Confirm photo licences or replace photos; host the Premium image locally (P-14) | Owner | `npm run images` |
 | 8 | Publish with GitHub Pages; place a real test order from a phone; delete test rows | Owner | README "Deploy" |
 | 9 | Optional: analytics provider, promo codes, genuine reviews, sampler bundle | Owner | FEATURES.md notes |
+
+## 11. Storefront redesign (v4): paused 2026-11-08 (project finished as a sample)
+
+Brief: Adagio-standard catalogue, navigation and merchandising, keeping Cha Bazaar's identity. Full assessment and conflicts: [ASSESSMENT.md](ASSESSMENT.md).
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Inspect code and docs; current-state assessment; conflicts C-1 to C-10 | **Done**: ASSESSMENT.md |
+| 2 | Announcement bar, navbar, mega menus, footer | Waiting for decisions C-3, C-7 |
+| 3 | Taxonomy, schema additions, category landing pages | Waiting for C-1, C-2, C-3 |
+| 4 | Product cards, homepage collections | Waiting for C-4 |
+| 5 | Product pages, quick view, search | Waiting for C-1, C-5 |
+| 6 | Cart/checkout verification, live order test, mobile | Needs the Apps Script deployed by the owner |
+| 7 | SEO, accessibility, performance, final tests | — |
+
+Phases 2–7 were **not started**; the owner closed the project as a sample e-commerce website. The assessment and the open decisions (C-1 to C-10) remain the starting point if the work resumes, here or in a new project.
