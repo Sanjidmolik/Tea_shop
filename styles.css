@@ -916,6 +916,10 @@ html[lang="bn"] .section-title { font-size: var(--step-3); }
 .promo-status.is-ok { color: var(--garden); }
 .promo-status.is-error { color: #B42318; }
 #placeOrderBtn { min-width: 10rem; }
+/* The checkout <form> wraps the modal body and footer. Make it the flex child Bootstrap's
+   scrollable modal expects, so the fields scroll and the header and Place order stay visible. */
+#checkoutForm { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+#checkoutForm > .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 
 /* ---------- Recent orders ---------- */
 .recent-orders {
