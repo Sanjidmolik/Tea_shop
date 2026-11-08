@@ -682,6 +682,28 @@ test("30. Sample listings are clearly marked and can never be bought", async () 
   assert.ok(!ld["@graph"].some((n) => /^CB-S-/.test(n.sku || "")), "samples not in structured data");
 });
 
+test("31. Checkout fits the screen: header and Place order stay visible, the form scrolls", async () => {
+  // Regression: the <form> wrapper broke Bootstrap's scrollable modal, so Place order was cut off.
+  for (const viewport of [{ width: 1917, height: 907 }, { width: 1280, height: 720 }, { width: 390, height: 844 }]) {
+    const page = await newPage({ viewport });
+    await page.goto(BASE);
+    await page.click('.add-to-cart[data-sku="CB-ASSM-200"]');
+    await page.click(OPEN_CART);
+    await page.click("#checkoutBtn");
+    await modalReady(page, "checkoutModal");
+    const box = await page.evaluate(() => {
+      const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+      const body = document.querySelector("#checkoutModal .modal-body");
+      return { vh: innerHeight, headerTop: r("#checkoutModal .modal-header").top, btnBottom: r("#placeOrderBtn").bottom,
+        scrolls: body.scrollHeight > body.clientHeight, canScroll: (body.scrollTop = 99999, body.scrollTop > 0) };
+    });
+    assert.ok(box.headerTop >= 0, `header visible at ${viewport.width}px`);
+    assert.ok(box.btnBottom <= box.vh, `Place order visible at ${viewport.width}px (bottom ${box.btnBottom} > ${box.vh})`);
+    assert.ok(box.scrolls && box.canScroll, `form scrolls at ${viewport.width}px`);
+    await page.context().close();
+  }
+});
+
 // ---------------------------------------------------------------------------
 (async () => {
   const srv = await start(PORT);
