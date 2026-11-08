@@ -8,6 +8,7 @@ A Bangladeshi online tea shop. You can browse estate teas from Sylhet, Assam and
 
 | Area | What it does |
 |---|---|
+| Store layout (v3) | Tea / Teaware / Gifts mega menus; category pages (`?shop=black-tea`) with a filter sidebar (origin, caffeine, flavour, price), search and sort; full product pages (`?product=darjeeling`) with related products; home page with category tiles, featured teas, gifts and teaware; 15 clearly marked **sample listings** (not for sale) as templates |
 | Catalogue | 8 teas with grade, origin, tasting notes, ingredients and brewing guide; pack sizes; price per 100g; sold-out and low-stock labels (from real stock numbers only) |
 | Quick view | Click a tea for full details, pack size, quantity and **Copy link**. Links like `#tea/darjeeling` open it directly; back/forward work |
 | Cart | Pack-size aware, saved in the browser, synced across tabs, free-delivery progress, reorder from recent orders |
@@ -42,7 +43,7 @@ Open http://localhost:8000. A yellow **Setup needed** bar lists any settings sti
 | File | What to change |
 |---|---|
 | `config.js` | Order server URL, phone, WhatsApp, Facebook, email, bKash/Nagad numbers, return window, analytics |
-| `catalog.js` | Products, pack sizes and prices, stock, delivery charges, genuine reviews. **Keep it strict JSON** (see the comment at the top) |
+| `catalog.js` | Departments, categories, filters, collections, products (incl. sample listings to replace), sizes and prices, stock, delivery charges, genuine reviews. **Keep it strict JSON** (see the comment at the top) |
 | `apps-script/` | The order server. Follow `apps-script/README.md` once |
 
 Phone numbers use the international format without `+`, e.g. `8801712345678`.
@@ -69,7 +70,8 @@ config.js             business settings (public, no secrets)
 catalog.js            products, prices, pack sizes, stock, delivery charges, reviews
 i18n.js               English and Bangla text
 shared.js             helpers shared by every page (contact links, language, delivery)
-app.js                shop logic: catalogue, cart, quick view, checkout, contact
+app.js                cart, product cards, quick view, checkout, contact
+store.js              menus, home sections, shop listing + filters, product pages, URLs
 analytics.js          optional Plausible / GA4
 animations.js / .css  optional motion layer (shop works without it)
 styles.css            design tokens and components

@@ -13,27 +13,36 @@ const REQUEST_TIMEOUT_MS = 20000;
 
 // ---- Catalogue helpers ----
 const products = CATALOG.products;
-const teas = products.filter((p) => p.type !== "bundle");
-const bundles = products.filter((p) => p.type === "bundle");
 const LOW_STOCK = CATALOG.lowStockThreshold ?? 5;
+const CATEGORY_BY_ID = new Map((CATALOG.categories || []).map((c) => [c.id, c]));
+const DEPARTMENT_BY_ID = new Map((CATALOG.departments || []).map((d) => [d.id, d]));
 
 const SKU_INDEX = new Map();
 products.forEach((p) => p.variants.forEach((v) => SKU_INDEX.set(v.sku, { product: p, variant: v })));
 
+const isSample = (p) => p && p.sample === true;
 const hasPrice = (v) => typeof v.price === "number" && v.price > 0;
 const pricedVariants = (p) => p.variants.filter(hasPrice);
-const isBuyable = (v) => hasPrice(v) && v.stock !== 0;
+// Sample listings (placeholder data) can be viewed but never bought.
+const isBuyable = (v) => hasPrice(v) && v.stock !== 0 && !isSample(SKU_INDEX.get(v.sku)?.product);
 const defaultVariant = (p) => pricedVariants(p).find((v) => v.stock !== 0) || pricedVariants(p)[0] || null;
 const unitPrice = (v) => Math.round((v.price / v.weightG) * 100);
 const weightLabel = (g) => (g >= 1000 ? `${g / 1000}kg` : `${g}g`);
+// "200g" for tea, or the size label ("600 ml", "Set of 6") for teaware and gifts. Same rule as sizeLabel_() in Code.gs.
+const variantLabel = (v) => (typeof v.weightG === "number" ? weightLabel(v.weightG) : localized(v.label) || "");
+const itemName = (p, v) => `${p.name} ${variantLabel(v)}`.trim();
 const stockState = (v) => {
   if (v.stock === 0) return "soldout";
   if (Number.isInteger(v.stock) && v.stock <= LOW_STOCK) return "low";
   return "ok";
 };
-const categoryLabel = (c) => t(`cat.${c}`, null, c);
+const categoryLabel = (id) => localized(CATEGORY_BY_ID.get(id)?.label) || id;
+const departmentLabel = (id) => localized(DEPARTMENT_BY_ID.get(id)?.label) || id;
+const categoryIcon = (id) => CATEGORY_BY_ID.get(id)?.icon || "bi-cup-hot";
+const shopHref = (params) => `index.html?${new URLSearchParams(params).toString()}`;
+const productHref = (p) => shopHref({ product: p.slug });
 
-// Which pack size is selected on each card / in quick view (UI state only)
+// Which size is selected on each card / in quick view / on the product page (UI state only)
 const selectedSku = new Map();
 const currentVariant = (p) => SKU_INDEX.get(selectedSku.get(p.id))?.variant || defaultVariant(p);
 
@@ -87,7 +96,7 @@ const addToCart = (sku, qty = 1) => {
   if (item) item.qty = Math.min(MAX_QTY, item.qty + qty);
   else cart.push({ sku, qty: Math.min(MAX_QTY, qty) });
   writeCart(cart);
-  announce(t("cart.added", { name: `${hit.product.name} ${weightLabel(hit.variant.weightG)}` }));
+  announce(t("cart.added", { name: itemName(hit.product, hit.variant) }));
   chaTrack("add_to_cart", { sku, name: hit.product.name, price: hit.variant.price, qty });
   return true;
 };
@@ -116,24 +125,23 @@ const flashAdded = (btn) => {
   }, 1200);
 };
 
-// ---- Product cards ----
-const grid = document.getElementById("product-grid");
-const samplerGrid = document.getElementById("sampler-grid");
-const categoryEl = document.getElementById("category-filters");
-const searchInput = document.getElementById("searchInput");
-const sortSelect = document.getElementById("sortSelect");
-let activeCategory = "All";
+// ---- Product cards (used by every grid: home sections, shop listing, related products) ----
+const CARD_COLS = "col-12 col-sm-6 col-lg-4 col-xl-3";
 
 const imgTag = (p, size, extra = "") => {
   const [w, h] = size === "card" ? [600, 450] : [1000, 750];
+  if (!p.image) {
+    return `<div class="img-placeholder ${size === "card" ? "tea-img" : "qv-img"}" role="img" aria-label="${escapeHtml(t("img.coming", { name: p.name }))}">
+      <i class="bi ${escapeHtml(categoryIcon(p.category))}" aria-hidden="true"></i><span>${escapeHtml(t("img.soon"))}</span></div>`;
+  }
   return `<img src="${escapeHtml(p.image[size] || p.image.fallback)}" width="${w}" height="${h}"
     alt="${escapeHtml(p.image.alt || p.name)}" data-fallback-src="${escapeHtml(p.image.fallback || FALLBACK_IMAGE)}" ${extra}>`;
 };
 
 const priceBlock = (v) => `
   <span class="price-now">${formatPrice(v.price)}</span>
-  <small>${escapeHtml(t("price.pack", { size: weightLabel(v.weightG) }))}</small>
-  ${v.weightG === 100 ? "" : `<small class="unit-price">${escapeHtml(t("price.per100", { price: formatPrice(unitPrice(v)) }))}</small>`}`;
+  <small>${escapeHtml(typeof v.weightG === "number" ? t("price.pack", { size: variantLabel(v) }) : variantLabel(v))}</small>
+  ${typeof v.weightG === "number" && v.weightG !== 100 ? `<small class="unit-price">${escapeHtml(t("price.per100", { price: formatPrice(unitPrice(v)) }))}</small>` : ""}`;
 
 const stockBadge = (v) => {
   const s = stockState(v);
@@ -141,75 +149,58 @@ const stockBadge = (v) => {
   if (s === "low") return `<span class="stock-badge low">${escapeHtml(t("stock.low", { n: v.stock }))}</span>`;
   return "";
 };
+const sampleFlag = (p) => (isSample(p) ? `<span class="sample-flag" title="${escapeHtml(t("sample.title"))}">${escapeHtml(t("sample.flag"))}</span>` : "");
+const buyLabel = (p, v) => (isSample(p) ? t("sample.soon") : isBuyable(v) ? t("cart.add") : t("stock.soldOut"));
 
 const variantPicker = (p, v, context) => {
   const options = pricedVariants(p);
   if (options.length < 2) return "";
   const id = `${context}-size-${p.id}`;
   return `
-    <label class="visually-hidden" for="${id}">${escapeHtml(t("variant.label"))}</label>
+    <label class="visually-hidden" for="${id}">${escapeHtml(t(p.department === "tea" ? "variant.label" : "variant.size"))}</label>
     <select class="form-select form-select-sm variant-select" id="${id}" data-product="${p.id}">
-      ${options.map((o) => `<option value="${escapeHtml(o.sku)}" ${o.sku === v.sku ? "selected" : ""}>${escapeHtml(weightLabel(o.weightG))}, ${formatPrice(o.price)}${o.stock === 0 ? ` (${escapeHtml(t("stock.soldOut"))})` : ""}</option>`).join("")}
+      ${options.map((o) => `<option value="${escapeHtml(o.sku)}" ${o.sku === v.sku ? "selected" : ""}>${escapeHtml(variantLabel(o))}, ${formatPrice(o.price)}${o.stock === 0 ? ` (${escapeHtml(t("stock.soldOut"))})` : ""}</option>`).join("")}
     </select>`;
 };
 
-const cardHtml = (p, i) => {
+const cardHtml = (p, i = 99, cols = CARD_COLS, context = "card") => {
   const v = currentVariant(p);
   if (!v) return "";
-  const soldOut = !isBuyable(v);
+  const buyable = isBuyable(v);
+  const meta = p.department === "tea" && p.grade
+    ? `<span class="grade">${escapeHtml(p.grade)}</span><span class="origin">${escapeHtml(p.origin || "")}</span>`
+    : `<span class="origin">${escapeHtml(categoryLabel(p.category))}</span>`;
   return `
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-      <article class="tea" data-product="${p.id}">
-        <a class="tea-img-link" href="#tea/${escapeHtml(p.slug)}" tabindex="-1" aria-hidden="true">
-          ${imgTag(p, "card", `class="tea-img" ${i < 4 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
-        </a>
+    <div class="${cols}">
+      <article class="tea${isSample(p) ? " is-sample" : ""}" data-product="${p.id}">
+        <div class="tea-media">
+          <a class="tea-img-link" href="${escapeHtml(productHref(p))}" tabindex="-1" aria-hidden="true">
+            ${imgTag(p, "card", `class="tea-img" ${i < 4 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"`)}
+          </a>
+          <button type="button" class="quick-view-btn" data-quickview="${escapeHtml(p.slug)}" aria-label="${escapeHtml(t("qv.open", { name: p.name }))}">
+            <i class="bi bi-eye" aria-hidden="true"></i> <span>${escapeHtml(t("qv.button"))}</span>
+          </button>
+        </div>
         <div class="tea-body">
-          <p class="tea-grade"><span class="grade">${escapeHtml(p.grade)}</span><span class="origin">${escapeHtml(p.origin)}</span></p>
-          <h3 class="tea-name"><a class="tea-link" href="#tea/${escapeHtml(p.slug)}">${escapeHtml(p.name)}</a></h3>
+          <p class="tea-grade">${meta}</p>
+          <h3 class="tea-name"><a class="tea-link" href="${escapeHtml(productHref(p))}">${escapeHtml(p.name)}</a></h3>
           <p class="tea-desc">${escapeHtml(p.description)}</p>
-          <ul class="tea-brew" aria-label="${escapeHtml(t("brew.label"))}">
+          ${p.brew ? `<ul class="tea-brew" aria-label="${escapeHtml(t("brew.label"))}">
             <li><i class="bi bi-thermometer-half" aria-hidden="true"></i>${p.brew.temp}°C</li>
             <li><i class="bi bi-hourglass-split" aria-hidden="true"></i>${escapeHtml(t("brew.mins", { n: p.brew.mins }))}</li>
-          </ul>
-          ${variantPicker(p, v, "card")}
+          </ul>` : ""}
+          ${variantPicker(p, v, context)}
           <div class="tea-buy">
             <p class="tea-price mb-0">${priceBlock(v)}</p>
             <div class="tea-actions">
-              ${stockBadge(v)}
-              <button class="btn btn-garden add-to-cart" data-sku="${escapeHtml(v.sku)}" ${soldOut ? "disabled" : ""}
-                aria-label="${escapeHtml(t("cart.addAria", { name: `${p.name} ${weightLabel(v.weightG)}` }))}">${escapeHtml(soldOut ? t("stock.soldOut") : t("cart.add"))}</button>
+              ${sampleFlag(p)}${stockBadge(v)}
+              <button class="btn btn-garden add-to-cart" data-sku="${escapeHtml(v.sku)}" ${buyable ? "" : "disabled"}
+                aria-label="${escapeHtml(buyable ? t("cart.addAria", { name: itemName(p, v) }) : `${buyLabel(p, v)}: ${itemName(p, v)}`)}">${escapeHtml(buyLabel(p, v))}</button>
             </div>
           </div>
         </div>
       </article>
     </div>`;
-};
-
-const renderCategories = () => {
-  const cats = ["All", ...new Set(teas.map((p) => p.category))];
-  categoryEl.innerHTML = cats.map((c) => {
-    const n = c === "All" ? teas.length : teas.filter((p) => p.category === c).length;
-    return `<button type="button" class="category-tab" data-category="${escapeHtml(c)}"
-      aria-pressed="${c === activeCategory}">${escapeHtml(categoryLabel(c))}<span class="count">${n}</span></button>`;
-  }).join("");
-};
-
-const renderProducts = (list) => {
-  if (!list.length) {
-    const q = searchInput.value.trim();
-    grid.innerHTML = `<div class="col-12"><div class="empty-state">
-      <p class="mb-2">${escapeHtml(t("shop.none", { q }))}${activeCategory !== "All" ? ` ${escapeHtml(t("shop.noneIn", { cat: categoryLabel(activeCategory) }))}` : ""}</p>
-      <button type="button" class="btn btn-outline-garden btn-sm" id="resetFilters">${escapeHtml(t("shop.showAll"))}</button>
-    </div></div>`;
-    return;
-  }
-  grid.innerHTML = list.map(cardHtml).join("");
-};
-
-const renderSamplers = () => {
-  const section = document.getElementById("samplers");
-  section.hidden = !bundles.length;
-  if (bundles.length) samplerGrid.innerHTML = bundles.map(cardHtml).join("");
 };
 
 // Replace a broken image with its JPEG original, then with the shop fallback.
@@ -225,66 +216,27 @@ document.addEventListener("error", (e) => {
   }
 }, true);
 
-// ---- Search, sort and filter ----
-const applyFilters = () => {
-  const q = searchInput.value.trim().toLowerCase();
-  const list = teas.filter((p) =>
-    (activeCategory === "All" || p.category === activeCategory) &&
-    [p.name, p.category, categoryLabel(p.category), p.description, p.grade, p.origin, p.tastingNotes || ""]
-      .some((s) => s.toLowerCase().includes(q))
-  );
-  const price = (p) => defaultVariant(p)?.price ?? Infinity;
-  const unit = (p) => (defaultVariant(p) ? unitPrice(defaultVariant(p)) : Infinity);
-  switch (sortSelect.value) {
-    case "price-asc":  list.sort((a, b) => price(a) - price(b)); break;
-    case "price-desc": list.sort((a, b) => price(b) - price(a)); break;
-    case "unit-asc":   list.sort((a, b) => unit(a) - unit(b)); break;
-    case "name-asc":   list.sort((a, b) => a.name.localeCompare(b.name)); break;
-    case "name-desc":  list.sort((a, b) => b.name.localeCompare(a.name)); break;
-    default: break; // featured: catalogue order
-  }
-  renderProducts(list);
-};
-
-searchInput.addEventListener("input", applyFilters);
-sortSelect.addEventListener("change", applyFilters);
-categoryEl.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-category]");
-  if (!btn) return;
-  activeCategory = btn.dataset.category;
-  renderCategories();
-  applyFilters();
-});
-
-// Card interactions (main grid and sampler grid)
-const onCardClick = (e) => {
-  if (e.target.closest("#resetFilters")) {
-    searchInput.value = "";
-    activeCategory = "All";
-    renderCategories();
-    applyFilters();
-    return;
-  }
+// Card interactions anywhere on the page (delegated, because grids are re-rendered)
+document.addEventListener("click", (e) => {
   const btn = e.target.closest(".add-to-cart");
   if (btn && !btn.disabled && addToCart(btn.dataset.sku)) flashAdded(btn);
-  if (e.target.closest(".tea-link, .tea-img-link")) quickViewOpenedByApp = true;
-};
-const onVariantChange = (e) => {
+  const qv = e.target.closest("[data-quickview]");
+  if (qv) {
+    quickViewOpenedByApp = true;
+    location.hash = `#tea/${qv.dataset.quickview}`;
+  }
+});
+document.addEventListener("change", (e) => {
   const sel = e.target.closest(".variant-select");
   if (!sel) return;
   const p = products.find((x) => x.id === Number(sel.dataset.product));
   selectedSku.set(p.id, sel.value);
   // Update the card's contents in place (keeps the column and any animation state)
-  const col = sel.closest(".col-12");
-  const i = [...col.parentElement.children].indexOf(col);
+  const col = sel.closest("[class*='col-']");
   const tmp = document.createElement("div");
-  tmp.innerHTML = cardHtml(p, i);
+  tmp.innerHTML = cardHtml(p, 99, col.className, sel.id.split("-size-")[0]);
   col.replaceChildren(...tmp.firstElementChild.childNodes);
-  document.getElementById(`card-size-${p.id}`)?.focus();
-};
-[grid, samplerGrid].forEach((g) => {
-  g.addEventListener("click", onCardClick);
-  g.addEventListener("change", onVariantChange);
+  document.getElementById(sel.id)?.focus();
 });
 
 // ---- Cart panel ----
@@ -354,7 +306,7 @@ const renderCart = () => {
 
   cartItemsEl.innerHTML = deliveryNote + cart.map((item) => {
     const name = item.product.name;
-    const size = weightLabel(item.variant.weightG);
+    const size = variantLabel(item.variant);
     return `
     <div class="cart-item">
       <img src="${escapeHtml(item.product.image.card || item.product.image.fallback)}" width="64" height="64" alt=""
@@ -465,8 +417,21 @@ let quickViewProduct = null;
 let quickViewOpenedByApp = false;
 let quickViewReturnFocus = null;
 let quickViewQty = 1;
+let quickViewPrevTitle = document.title;
 
-const productUrl = (p) => `${location.origin}${location.pathname}#tea/${p.slug}`;
+const productUrl = (p) => new URL(productHref(p), location.href).href; // shareable product page
+
+// Facts list shared by quick view and the product page
+const productFacts = (p) => {
+  const rows = [];
+  const add = (label, value) => { if (value) rows.push(`<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`); };
+  add(t("qv.notes"), p.tastingNotes);
+  add(t("qv.ingredients"), p.ingredients);
+  if (p.brew) add(t("qv.brew"), t("qv.brewText", { temp: p.brew.temp, mins: p.brew.mins }));
+  if (p.caffeine) add(t("filters.caffeine"), localized((CATALOG.filters?.caffeine || []).find((c) => c.id === p.caffeine)?.label));
+  add(t("qv.details"), p.details);
+  return rows.join("");
+};
 
 const renderQuickView = (p) => {
   const v = currentVariant(p);
@@ -478,20 +443,17 @@ const renderQuickView = (p) => {
         ${imgTag(p, "large", 'class="qv-img" decoding="async"')}
       </div>
       <div class="col-md-6">
-        <p class="tea-grade"><span class="grade">${escapeHtml(p.grade)}</span><span class="origin">${escapeHtml(p.origin)}</span></p>
+        ${sampleFlag(p)}
+        <p class="tea-grade">${p.grade ? `<span class="grade">${escapeHtml(p.grade)}</span><span class="origin">${escapeHtml(p.origin || "")}</span>` : `<span class="origin">${escapeHtml(categoryLabel(p.category))}</span>`}</p>
         <p>${escapeHtml(p.description)}</p>
-        <dl class="qv-facts">
-          ${p.tastingNotes ? `<div><dt>${escapeHtml(t("qv.notes"))}</dt><dd>${escapeHtml(p.tastingNotes)}</dd></div>` : ""}
-          ${p.ingredients ? `<div><dt>${escapeHtml(t("qv.ingredients"))}</dt><dd>${escapeHtml(p.ingredients)}</dd></div>` : ""}
-          <div><dt>${escapeHtml(t("qv.brew"))}</dt><dd>${escapeHtml(t("qv.brewText", { temp: p.brew.temp, mins: p.brew.mins }))}</dd></div>
-        </dl>
+        <dl class="qv-facts">${productFacts(p)}</dl>
         ${v ? `
         <fieldset class="qv-sizes" ${options.length < 2 ? "hidden" : ""}>
-          <legend class="form-label">${escapeHtml(t("variant.label"))}</legend>
+          <legend class="form-label">${escapeHtml(t(p.department === "tea" ? "variant.label" : "variant.size"))}</legend>
           <div class="size-chips">
             ${options.map((o) => `<label class="size-chip">
               <input type="radio" name="qv-size" value="${escapeHtml(o.sku)}" ${o.sku === v.sku ? "checked" : ""} ${o.stock === 0 ? "disabled" : ""}>
-              <span>${escapeHtml(weightLabel(o.weightG))}<small>${formatPrice(o.price)}</small></span>
+              <span>${escapeHtml(variantLabel(o))}<small>${formatPrice(o.price)}</small></span>
             </label>`).join("")}
           </div>
         </fieldset>
@@ -503,8 +465,9 @@ const renderQuickView = (p) => {
             <span id="qv-qty" aria-live="polite">${quickViewQty}</span>
             <button type="button" data-qv-qty="1" aria-label="${escapeHtml(t("cart.more"))}">+</button>
           </div>
-          <button type="button" class="btn btn-garden" id="qv-add" data-sku="${escapeHtml(v.sku)}" ${isBuyable(v) ? "" : "disabled"}>${escapeHtml(isBuyable(v) ? t("cart.add") : t("stock.soldOut"))}</button>
+          <button type="button" class="btn btn-garden" id="qv-add" data-sku="${escapeHtml(v.sku)}" ${isBuyable(v) ? "" : "disabled"}>${escapeHtml(buyLabel(p, v))}</button>
         </div>` : `<p class="text-body-secondary">${escapeHtml(t("stock.unpriced"))}</p>`}
+        <a class="btn btn-outline-garden btn-sm mt-3 me-2" href="${escapeHtml(productHref(p))}" id="qv-details">${escapeHtml(t("qv.details"))}</a>
         <button type="button" class="btn btn-link-muted btn-sm px-0 mt-3" id="qv-share">
           <i class="bi bi-link-45deg" aria-hidden="true"></i> <span>${escapeHtml(t("qv.share"))}</span>
         </button>
@@ -517,6 +480,7 @@ const openQuickView = (p) => {
   if (!isOpen || (quickViewProduct && quickViewProduct.id !== p.id)) quickViewQty = 1;
   quickViewProduct = p;
   renderQuickView(p);
+  if (!isOpen) quickViewPrevTitle = document.title;
   document.title = `${p.name} | Cha Bazaar`;
   if (!isOpen) {
     quickViewReturnFocus = document.activeElement;
@@ -530,7 +494,7 @@ teaModalBody.addEventListener("change", (e) => {
   selectedSku.set(quickViewProduct.id, e.target.value);
   renderQuickView(quickViewProduct);
   teaModalBody.querySelector(`input[name="qv-size"][value="${CSS.escape(e.target.value)}"]`)?.focus();
-  applyFilters();
+  refreshCards(); // keep the grids behind the modal on the same size
 });
 
 teaModalBody.addEventListener("click", async (e) => {
@@ -566,7 +530,7 @@ teaModalBody.addEventListener("click", async (e) => {
 const clearTeaHash = () => history.replaceState(null, "", `${location.pathname}${location.search}`);
 
 teaModalEl.addEventListener("hidden.bs.modal", () => {
-  document.title = BASE_TITLE;
+  document.title = quickViewPrevTitle;
   quickViewProduct = null;
   if (location.hash.startsWith("#tea/")) {
     if (quickViewOpenedByApp) history.back();
@@ -594,7 +558,6 @@ const routeFromHash = () => {
     quickViewOpenedByApp = false;
     if (teaModalEl.classList.contains("show")) hideQuickView();
     showToast(t("qv.notFound"));
-    document.getElementById("products").scrollIntoView();
     return;
   }
   if (teaModalEl.classList.contains("show")) {
@@ -683,7 +646,7 @@ const checkoutTotals = () => {
 const renderCheckoutSummary = () => {
   const { cart, subtotal, discount, delivery, total } = checkoutTotals();
   checkoutSummaryEl.innerHTML = cart.map((i) => `
-      <li><span>${escapeHtml(i.product.name)} ${escapeHtml(weightLabel(i.variant.weightG))} × ${i.qty}
+      <li><span>${escapeHtml(itemName(i.product, i.variant))} × ${i.qty}
         <small class="d-block text-body-secondary">${escapeHtml(t("summary.each", { price: formatPrice(i.price) }))}</small></span>
         <span>${formatPrice(i.lineTotal)}</span></li>`).join("") + `
       <li class="muted"><span>${escapeHtml(t("cart.subtotal"))}</span><span>${formatPrice(subtotal)}</span></li>
@@ -699,7 +662,7 @@ const setCheckoutError = (html) => {
 
 const orderWhatsAppText = () => {
   const { cart, total } = checkoutTotals();
-  const lines = cart.map((i) => `${i.qty} × ${i.product.name} (${weightLabel(i.variant.weightG)})`);
+  const lines = cart.map((i) => `${i.qty} × ${i.product.name} (${variantLabel(i.variant)})`);
   const area = zoneById(selectedArea());
   return [t("wa.orderIntro"), ...lines,
     area ? `${t("co.area")}: ${localized(area.label)}` : "",
@@ -813,7 +776,7 @@ const markInvalid = (id) => {
 
 const describeServerError = (data) => {
   const hit = data.sku && SKU_INDEX.get(data.sku);
-  const name = hit ? `${hit.product.name} ${weightLabel(hit.variant.weightG)}` : "";
+  const name = hit ? itemName(hit.product, hit.variant) : "";
   switch (data.error) {
     case "sold_out": return t("err.soldOut", { name });
     case "insufficient_stock": return t("err.stock", { name, n: data.available });
@@ -1059,10 +1022,10 @@ const injectStructuredData = () => {
     ...(isSet(CFG.BUSINESS_PHONE) ? { telephone: `+${intlNumber(CFG.BUSINESS_PHONE)}` } : {}),
     ...(isSet(CFG.FACEBOOK_URL) ? { sameAs: [CFG.FACEBOOK_URL] } : {})
   }];
-  products.forEach((p) => {
+  products.filter((p) => !isSample(p)).forEach((p) => {
     pricedVariants(p).forEach((v) => {
       const offer = {
-        "@type": "Offer", price: v.price.toFixed(2), priceCurrency: "BDT", url: `${site}#tea/${p.slug}`,
+        "@type": "Offer", price: v.price.toFixed(2), priceCurrency: "BDT", url: `${site}?product=${p.slug}`,
         seller: { "@id": `${site}#store` }
       };
       // Availability only when real stock data exists
@@ -1070,12 +1033,12 @@ const injectStructuredData = () => {
       else if (Number.isInteger(v.stock)) offer.availability = "https://schema.org/InStock";
       graph.push({
         "@type": "Product",
-        name: `${p.name} ${weightLabel(v.weightG)}`,
+        name: itemName(p, v),
         description: p.description,
-        image: abs(p.image.large || p.image.fallback),
+        ...(p.image ? { image: abs(p.image.large || p.image.fallback) } : {}),
         sku: v.sku,
-        category: `${p.category} tea`,
-        weight: { "@type": "QuantitativeValue", value: v.weightG, unitCode: "GRM" },
+        category: CATEGORY_BY_ID.get(p.category)?.label?.en || p.category,
+        ...(typeof v.weightG === "number" ? { weight: { "@type": "QuantitativeValue", value: v.weightG, unitCode: "GRM" } } : {}),
         offers: offer
       });
     });
@@ -1092,7 +1055,7 @@ const waFloat = document.getElementById("waFloat");
 const updateWaFloat = () => {
   const cart = readCart();
   const text = cart.length
-    ? [t("wa.cartIntro"), ...cart.map((i) => `${i.qty} × ${i.product.name} (${weightLabel(i.variant.weightG)})`)].join("\n")
+    ? [t("wa.cartIntro"), ...cart.map((i) => `${i.qty} × ${i.product.name} (${variantLabel(i.variant)})`)].join("\n")
     : t("wa.greeting");
   const link = whatsappLink(text);
   waFloat.hidden = !link;
@@ -1102,9 +1065,7 @@ waFloat.addEventListener("click", updateWaFloat);
 
 // ---- Language changes re-render everything built in JavaScript ----
 document.addEventListener("cha:lang", () => {
-  renderCategories();
-  applyFilters();
-  renderSamplers();
+  renderRoute(); // store.js: menus, current view and grids
   renderCart();
   renderReviews();
   updateWaFloat();
@@ -1115,12 +1076,8 @@ document.addEventListener("cha:lang", () => {
 // ---- Sync cart across tabs ----
 window.addEventListener("storage", (e) => { if (e.key === CART_KEY || e.key === AREA_KEY) renderCart(); });
 
-// ---- Init ----
-renderCategories();
-applyFilters();
-renderSamplers();
+// ---- Init (catalogue views, menus and the #tea/ quick view are started by store.js) ----
 renderCart();
 renderReviews();
 updateWaFloat();
 injectStructuredData();
-routeFromHash();

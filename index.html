@@ -36,7 +36,7 @@
     <link href="animations.css" rel="stylesheet" />
   </head>
   <body>
-    <a class="skip-link" href="#products" data-i18n="skip">Skip to the teas</a>
+    <a class="skip-link" href="#main" data-i18n="skip.main">Skip to main content</a>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-md navbar-dark site-nav sticky-top" aria-label="Main">
@@ -55,15 +55,28 @@
         </div>
         <div class="collapse navbar-collapse" id="navContent">
           <ul class="navbar-nav ms-md-4 me-auto">
-            <li class="nav-item"><a class="nav-link" href="#products" data-i18n="nav.teas">Teas</a></li>
-            <li class="nav-item"><a class="nav-link" href="#trust" data-i18n="nav.promise">Our promise</a></li>
-            <li class="nav-item"><a class="nav-link" href="#about" data-i18n="nav.sourcing">Our sourcing</a></li>
-            <li class="nav-item"><a class="nav-link" href="#contact" data-i18n="nav.contact">Contact</a></li>
+            <li class="nav-item dropdown dropdown-mega">
+              <a class="nav-link dropdown-toggle" href="index.html?shop=tea" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-i18n="nav.tea">Tea</a>
+              <div class="dropdown-menu mega-menu" data-mega="tea"></div>
+            </li>
+            <li class="nav-item dropdown dropdown-mega">
+              <a class="nav-link dropdown-toggle" href="index.html?shop=teaware" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-i18n="nav.teaware">Teaware</a>
+              <div class="dropdown-menu mega-menu" data-mega="teaware"></div>
+            </li>
+            <li class="nav-item dropdown dropdown-mega">
+              <a class="nav-link dropdown-toggle" href="index.html?shop=gifts" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-i18n="nav.gifts">Gifts</a>
+              <div class="dropdown-menu mega-menu" data-mega="gifts"></div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="index.html#trust" data-i18n="nav.promise">Our promise</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html#contact" data-i18n="nav.contact">Contact</a></li>
           </ul>
         </div>
       </div>
     </nav>
 
+    <main id="main" tabindex="-1">
+    <!-- ===== Home view ===== -->
+    <div data-view="home">
     <!-- Hero -->
     <header class="hero" id="top">
       <div class="container">
@@ -72,7 +85,7 @@
             <h1 class="hero-title" data-i18n="hero.title">Garden tea, packed fresh every week</h1>
             <p class="hero-lead" data-i18n="hero.lead">We buy straight from estates in Sylhet, Assam and Darjeeling, pack your order by hand, and deliver it to your door. Pay when it arrives.</p>
             <div class="d-flex flex-wrap align-items-center gap-3">
-              <a href="#products" class="btn btn-liquor btn-lg" data-i18n="hero.cta">Browse the teas</a>
+              <a href="index.html?shop=tea" class="btn btn-liquor btn-lg" data-i18n="hero.cta">Browse the teas</a>
               <a href="#about" class="hero-link" data-i18n="hero.link">How we source</a>
             </div>
           </div>
@@ -106,42 +119,40 @@
       </div>
     </section>
 
-    <!-- Products -->
-    <main class="container shop" id="products">
-      <div class="shop-head">
-        <h2 class="section-title" data-i18n="shop.title">The teas</h2>
-        <div class="shop-tools">
-          <label class="visually-hidden" for="searchInput" data-i18n="shop.searchLabel">Search teas</label>
-          <div class="search">
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <input type="search" class="form-control" placeholder="Search teas" id="searchInput" data-i18n-attr="placeholder:shop.searchLabel" />
-          </div>
-          <label class="visually-hidden" for="sortSelect" data-i18n="shop.sortLabel">Sort teas</label>
-          <select class="form-select" id="sortSelect">
-            <option value="featured" data-i18n="sort.featured">Our picks first</option>
-            <option value="price-asc" data-i18n="sort.priceAsc">Price, low to high</option>
-            <option value="price-desc" data-i18n="sort.priceDesc">Price, high to low</option>
-            <option value="unit-asc" data-i18n="sort.unitAsc">Best value per 100g</option>
-            <option value="name-asc" data-i18n="sort.nameAsc">Name, A to Z</option>
-            <option value="name-desc" data-i18n="sort.nameDesc">Name, Z to A</option>
-          </select>
+    <!-- Shop by category -->
+    <section class="home-section container" aria-labelledby="shopByTitle">
+      <h2 class="section-title" id="shopByTitle" data-i18n="home.shopBy">Shop by category</h2>
+      <div class="cat-tiles" id="category-tiles"><!-- JS renders tiles from catalog.js --></div>
+      <div class="shop-by-links" id="shop-by-links"><!-- JS renders caffeine / flavour / origin shortcuts --></div>
+    </section>
+
+    <!-- Featured -->
+    <section class="home-section container" aria-labelledby="featuredTitle">
+      <div class="section-head">
+        <h2 class="section-title" id="featuredTitle" data-collection-title="featured">Featured teas</h2>
+        <a class="section-link" href="index.html?shop=tea" data-i18n="home.allTea">Shop all tea</a>
+      </div>
+      <div class="row g-4" id="featured-grid"></div>
+    </section>
+
+    <!-- Gifts -->
+    <section class="home-section home-band" aria-labelledby="giftsTitle">
+      <div class="container">
+        <div class="section-head">
+          <h2 class="section-title" id="giftsTitle" data-i18n="home.gifts">Gifts and samplers</h2>
+          <a class="section-link" href="index.html?shop=gifts" data-i18n="home.allGifts">Shop all gifts</a>
         </div>
+        <div class="row g-4" id="gift-grid"></div>
       </div>
+    </section>
 
-      <div class="category-tabs" id="category-filters" role="group" aria-label="Filter by type of tea" data-i18n-attr="aria-label:shop.filterLabel">
-        <!-- JS renders category buttons -->
+    <!-- Teaware -->
+    <section class="home-section container" aria-labelledby="teawareTitle">
+      <div class="section-head">
+        <h2 class="section-title" id="teawareTitle" data-i18n="home.teaware">Brew it right</h2>
+        <a class="section-link" href="index.html?shop=teaware" data-i18n="home.allTeaware">Shop all teaware</a>
       </div>
-
-      <div class="row g-4" id="product-grid" aria-live="polite">
-        <!-- JS renders product cards -->
-      </div>
-    </main>
-
-    <!-- Sampler bundles (shown only when bundles exist in catalog.js) -->
-    <section class="samplers container" id="samplers" hidden aria-labelledby="samplersTitle">
-      <h2 class="section-title" id="samplersTitle" data-i18n="samplers.title">Sampler boxes</h2>
-      <p class="section-lead" data-i18n="samplers.lead">Not sure where to start? Try a few teas in smaller packs.</p>
-      <div class="row g-4" id="sampler-grid"></div>
+      <div class="row g-4" id="teaware-grid"></div>
     </section>
 
     <!-- Trust -->
@@ -268,6 +279,65 @@
         </div>
       </div>
     </section>
+
+    </div><!-- /home view -->
+
+    <!-- ===== Shop view (index.html?shop=...) ===== -->
+    <div data-view="shop" hidden>
+      <section class="container shop" id="products" aria-labelledby="shopTitle">
+        <nav aria-label="Breadcrumb" data-i18n-attr="aria-label:crumbs.label"><ol class="crumbs" id="shop-crumbs"></ol></nav>
+        <div class="shop-head">
+          <div>
+            <h1 class="section-title" id="shopTitle">Tea</h1>
+            <p class="section-lead" id="shop-intro"></p>
+          </div>
+          <div class="shop-tools">
+            <label class="visually-hidden" for="searchInput" data-i18n="shop.searchLabel">Search the shop</label>
+            <div class="search">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" class="form-control" placeholder="Search" id="searchInput" data-i18n-attr="placeholder:shop.searchPh" />
+            </div>
+            <label class="visually-hidden" for="sortSelect" data-i18n="shop.sortLabel">Sort</label>
+            <select class="form-select" id="sortSelect">
+              <option value="featured" data-i18n="sort.featured">Our picks first</option>
+              <option value="price-asc" data-i18n="sort.priceAsc">Price, low to high</option>
+              <option value="price-desc" data-i18n="sort.priceDesc">Price, high to low</option>
+              <option value="unit-asc" data-i18n="sort.unitAsc">Best value per 100g</option>
+              <option value="name-asc" data-i18n="sort.nameAsc">Name, A to Z</option>
+              <option value="name-desc" data-i18n="sort.nameDesc">Name, Z to A</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="category-tabs" id="category-filters" role="group" aria-label="Categories" data-i18n-attr="aria-label:shop.catLabel"></div>
+
+        <div class="shop-layout">
+          <aside class="offcanvas-lg offcanvas-start filters" tabindex="-1" id="shop-filters" aria-labelledby="filtersTitle">
+            <div class="offcanvas-header">
+              <h2 class="offcanvas-title" id="filtersTitle" data-i18n="filters.title">Filters</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#shop-filters" aria-label="Close filters" data-i18n-attr="aria-label:filters.close"></button>
+            </div>
+            <div class="offcanvas-body" id="filter-groups"><!-- JS renders filter groups --></div>
+          </aside>
+          <div class="shop-results">
+            <div class="results-bar">
+              <button type="button" class="btn btn-outline-garden btn-sm d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#shop-filters" aria-controls="shop-filters">
+                <i class="bi bi-sliders" aria-hidden="true"></i> <span data-i18n="filters.title">Filters</span> <span class="filter-count" id="filter-count"></span>
+              </button>
+              <p class="result-count mb-0" id="result-count" aria-live="polite"></p>
+              <button type="button" class="btn btn-link-muted btn-sm" id="clearFilters" hidden data-i18n="filters.clear">Clear filters</button>
+            </div>
+            <div class="row g-4" id="product-grid" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== Product view (index.html?product=slug) ===== -->
+    <div data-view="product" hidden>
+      <section class="container product-page" id="product-page" aria-live="polite"></section>
+    </div>
+    </main>
 
     <!-- Cart Offcanvas -->
     <div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="cartOffcanvas" aria-labelledby="cartLabel">
@@ -445,6 +515,10 @@
             <p class="footer-tag" data-i18n="footer.tag">Estate teas, packed fresh in Dhaka.</p>
           </div>
           <div>
+            <h2 class="footer-heading" data-i18n="footer.shop">Shop</h2>
+            <ul class="footer-links" data-footer-shop></ul>
+          </div>
+          <div>
             <h2 class="footer-heading" data-i18n="footer.contact">Contact</h2>
             <ul class="footer-links">
               <li data-contact="phone" hidden><a data-link="phone" href="#"></a></li>
@@ -475,6 +549,7 @@
     <script src="shared.js"></script>
     <script src="analytics.js"></script>
     <script src="app.js"></script>
+    <script src="store.js"></script>
     <script src="animations.js"></script>
   </body>
 </html>

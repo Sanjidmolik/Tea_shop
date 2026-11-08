@@ -31,7 +31,7 @@ const HEADERS = {
   orders: ["Order ID", "Order date", "Status", "Customer name", "Phone", "Email", "Delivery address",
     "Delivery area", "Delivery estimate", "Products", "Total quantity", "Subtotal (BDT)", "Discount (BDT)",
     "Promo code", "Delivery charge (BDT)", "Total (BDT)", "Payment method", "Customer note", "Language", "Request ID"],
-  items: ["Order ID", "Order date", "SKU", "Product", "Pack size (g)", "Quantity", "Unit price (BDT)", "Line total (BDT)"],
+  items: ["Order ID", "Order date", "SKU", "Product", "Size", "Quantity", "Unit price (BDT)", "Line total (BDT)"],
   messages: ["Received", "Status", "Name", "Email or phone", "Message", "Language"],
   promos: ["Code", "Type (percent or fixed)", "Value", "Minimum subtotal (BDT)", "Maximum discount (BDT)",
     "Active (TRUE/FALSE)", "Starts (optional date)", "Ends (optional date)", "Note"]
@@ -152,7 +152,7 @@ function handleOrder_(body) {
     const items = sheet_(ss, "items");
 
     const productsText = priced.lines.map(function (l) {
-      return l.qty + " × " + l.name + " " + l.weightG + "g @ ৳" + l.unitPrice + " = ৳" + l.lineTotal;
+      return l.qty + " × " + l.name + " " + l.size + " @ ৳" + l.unitPrice + " = ৳" + l.lineTotal;
     }).join("\n");
     const totalQty = priced.lines.reduce(function (s, l) { return s + l.qty; }, 0);
 
@@ -163,7 +163,7 @@ function handleOrder_(body) {
       PAYMENT_LABELS[payment], cell_(notes), lang, requestId
     ]);
     priced.lines.forEach(function (l) {
-      items.appendRow([orderId, when, l.sku, cell_(l.name), l.weightG, l.qty, l.unitPrice, l.lineTotal]);
+      items.appendRow([orderId, when, l.sku, cell_(l.name), cell_(l.size), l.qty, l.unitPrice, l.lineTotal]);
     });
 
     const result = {
@@ -218,17 +218,24 @@ function priceItems_(catalog, rawItems) {
     const sku = order[j];
     const hit = index[sku];
     const v = hit.variant;
+    if (hit.product.sample === true) return fail_("sample_product", { sku: sku }); // placeholder listing, not for sale
     if (typeof v.price !== "number" || v.price <= 0) return fail_("invalid_items", { sku: sku });
     if (v.stock === 0) return fail_("sold_out", { sku: sku });
     if (typeof v.stock === "number" && qtyBySku[sku] > v.stock) return fail_("insufficient_stock", { sku: sku, available: v.stock });
     const lineTotal = v.price * qtyBySku[sku];
     subtotal += lineTotal;
-    lines.push({ sku: sku, name: hit.product.name, weightG: v.weightG, qty: qtyBySku[sku], unitPrice: v.price, lineTotal: lineTotal });
+    lines.push({ sku: sku, name: hit.product.name, size: sizeLabel_(v), qty: qtyBySku[sku], unitPrice: v.price, lineTotal: lineTotal });
   }
   return { ok: true, lines: lines, subtotal: subtotal };
 }
 
 /** Same rule as deliveryFee() in shared.js. */
+/** "200g", "1kg" or the variant's English label ("600 ml", "Set of 6"). Same rule as variantLabel() in app.js. */
+function sizeLabel_(v) {
+  if (typeof v.weightG === "number") return v.weightG >= 1000 ? v.weightG / 1000 + "kg" : v.weightG + "g";
+  return v.label && v.label.en ? v.label.en : "";
+}
+
 function deliveryFee_(zone, subtotal) {
   if (subtotal <= 0) return 0;
   if (zone.freeOver !== null && zone.freeOver !== undefined && subtotal >= zone.freeOver) return 0;
@@ -441,7 +448,7 @@ function checkSetup() {
   if (!catalog) throw new Error("Catalogue could not be loaded. Check CATALOG_URL and that the site is published.");
   catalog.products.forEach(function (p) {
     p.variants.forEach(function (v) {
-      console.log(v.sku + "  " + p.name + " " + v.weightG + "g  " + (v.price === null ? "(no price: hidden)" : "৳" + v.price) + (v.stock === 0 ? "  SOLD OUT" : ""));
+      console.log(v.sku + "  " + p.name + " " + sizeLabel_(v) + "  " + (p.sample ? "(SAMPLE: not for sale)  " : "") + (v.price === null ? "(no price: hidden)" : "৳" + v.price) + (v.stock === 0 ? "  SOLD OUT" : ""));
     });
   });
   catalog.delivery.zones.forEach(function (z) {
