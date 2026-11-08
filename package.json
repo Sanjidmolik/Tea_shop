@@ -2,6 +2,7 @@
   "name": "cha-bazaar",
   "version": "2.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Cha Bazaar tea shop: static website + Google Apps Script order server. No build step.",
   "scripts": {
     "serve": "node tests/mock-server.js",
