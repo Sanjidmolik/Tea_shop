@@ -2,7 +2,7 @@
 
 A Bangladeshi online tea shop. You can browse estate teas from Sylhet, Assam and Darjeeling, choose pack sizes, and order with cash on delivery, bKash or Nagad. Orders go to a private Google Sheet through a Google Apps Script server that re-checks every price. The site is plain HTML, CSS and JavaScript on Bootstrap 5, with **no build step**. It's available in English and Bangla.
 
-> **Before going live**, fill in `config.js` and deploy the order server (`apps-script/README.md`). Until `ORDER_ENDPOINT` is set, checkout refuses to place orders and points customers to WhatsApp or phone. It never pretends an order went through.
+> **Project status (2026-11-08): finished as a sample e-commerce website.** Everything below works and is tested (`npm test`: static checks, 27 server tests, 32 browser tests). To take real orders, deploy the order server (`apps-script/README.md`) and fill in `config.js`. Until then, checkout refuses orders and never fakes a confirmation. The 15 products marked "Sample listing" are placeholders and can't be bought. Planned next steps that were not built are in [ASSESSMENT.md](ASSESSMENT.md).
 
 ## Features
 

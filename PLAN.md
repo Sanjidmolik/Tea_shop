@@ -117,7 +117,7 @@ Feature statuses live in FEATURES.md. When an item ships, update its status to I
 | 8 | Publish with GitHub Pages; place a real test order from a phone; delete test rows | Owner | README "Deploy" |
 | 9 | Optional: analytics provider, promo codes, genuine reviews, sampler bundle | Owner | FEATURES.md notes |
 
-## 11. Storefront redesign (v4): started 2026-11-08
+## 11. Storefront redesign (v4): paused 2026-11-08 (project finished as a sample)
 
 Brief: Adagio-standard catalogue, navigation and merchandising, keeping Cha Bazaar's identity. Full assessment and conflicts: [ASSESSMENT.md](ASSESSMENT.md).
 
@@ -131,4 +131,4 @@ Brief: Adagio-standard catalogue, navigation and merchandising, keeping Cha Baza
 | 6 | Cart/checkout verification, live order test, mobile | Needs the Apps Script deployed by the owner |
 | 7 | SEO, accessibility, performance, final tests | — |
 
-Note: the v3 store layout (commit `62f25c9`) is on the branch but not yet merged into `main`.
+Phases 2–7 were **not started**; the owner closed the project as a sample e-commerce website. The assessment and the open decisions (C-1 to C-10) remain the starting point if the work resumes, here or in a new project.
